@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUNO: A Trilemma Framework for GSE Reform Analytics · David Bieri · Virginia Tech SPIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Spectral+SC:wght@400;600&family=JetBrains+Mono:wght@300;400;500&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f1ea;
+    --bg2: #ede9e0;
+    --bg3: #e4dfd4;
+    --text: #1c1917;
+    --text2: #44403c;
+    --text3: #78716c;
+    --accent: #8b3a0f;
+    --accent2: #b45309;
+    --border: #c7c0b4;
+    --border2: #d6d0c7;
+    --card: #faf8f4;
+    --mono: 'JetBrains Mono', monospace;
+    --serif: 'Spectral', Georgia, serif;
+    --serif-sc: 'Spectral SC', 'Spectral', serif;
+    --body: 'Source Serif 4', Georgia, serif;
+  }
+  [data-theme="dark"] {
+    --bg: #141210;
+    --bg2: #1c1917;
+    --bg3: #28231f;
+    --text: #f0ebe3;
+    --text2: #c8bfb5;
+    --text3: #8a7f76;
+    --accent: #c2693a;
+    --accent2: #d97706;
+    --border: #3a342e;
+    --border2: #2e2924;
+    --card: #1f1c18;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 16px; scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--body);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.6rem 2rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+  }
+  .nav-left { display: flex; align-items: center; gap: 1.5rem; }
+  .nav-brand { font-weight: 500; color: var(--text); }
+  .nav-brand span { color: var(--accent); }
+  .nav-links { display: flex; gap: 1.2rem; }
+  .nav-links a {
+    color: var(--text3); text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 1rem; }
+  .nav-version { color: var(--text3); }
+  .theme-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--text2); cursor: pointer;
+    padding: 0.25rem 0.5rem; border-radius: 3px;
+    font-family: var(--mono); font-size: 0.72rem;
+    transition: all 0.2s;
+  }
+  .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── HERO ── */
+  .hero {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 5rem 2rem 3rem;
+    border-bottom: 1px solid var(--border2);
+  }
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.4rem;
+  }
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 300;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.6rem;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .hero-epigraph {
+    font-family: var(--body);
+    font-style: italic;
+    font-size: 0.95rem;
+    font-weight: 300;
+    color: var(--text3);
+    border-left: 2px solid var(--accent);
+    padding-left: 1.2rem;
+    margin-bottom: 2rem;
+    max-width: 620px;
+    line-height: 1.65;
+  }
+  .hero-desc {
+    font-size: 1rem;
+    font-weight: 300;
+    color: var(--text2);
+    max-width: 680px;
+    margin-bottom: 2.5rem;
+    line-height: 1.75;
+  }
+
+  /* ── STATS ── */
+  .stats {
+    display: flex; gap: 2rem; flex-wrap: wrap;
+    margin-bottom: 2.5rem;
+  }
+  .stat {
+    font-family: var(--mono);
+    display: flex; align-items: baseline; gap: 0.5rem;
+  }
+  .stat-n {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--text3);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── CTA ── */
+  .cta-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    padding: 0.75rem 1.75rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    border-radius: 3px;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    text-decoration: none;
+    padding: 0.75rem 1.4rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    border-radius: 3px;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── MAIN CONTENT ── */
+  .content {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 2rem 4rem;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section-anchor { padding-top: 3.5rem; }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+  }
+  .section-title {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border2);
+  }
+
+  /* ── TAB CARDS ── */
+  .tab-grid {
+    display: grid;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .tab-card {
+    background: var(--card);
+    border-bottom: 1px solid var(--border2);
+    padding: 1.4rem 1.6rem;
+    display: grid;
+    grid-template-columns: 3.5rem 1fr;
+    gap: 0 1.2rem;
+    transition: background 0.15s;
+  }
+  .tab-card:last-child { border-bottom: none; }
+  .tab-card:hover { background: var(--bg2); }
+  .tab-num {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    padding-top: 0.15rem;
+  }
+  .tab-body {}
+  .tab-name {
+    font-family: var(--serif-sc);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    color: var(--text);
+    margin-bottom: 0.15rem;
+  }
+  .tab-headline {
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .tab-desc {
+    font-size: 0.875rem;
+    font-weight: 300;
+    color: var(--text2);
+    line-height: 1.65;
+  }
+  .tab-group-label {
+    font-family: var(--mono);
+    font-size: 0.63rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    background: var(--bg3);
+    padding: 0.4rem 1.6rem;
+    border-bottom: 1px solid var(--border2);
+  }
+
+  /* ── SIGNAL CHAIN ── */
+  .chain {
+    display: flex; align-items: center; flex-wrap: wrap;
+    gap: 0;
+    margin: 1.5rem 0;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+  }
+  .chain-item {
+    display: flex; align-items: center;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    padding: 0.35rem 0.7rem;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+  .chain-arrow {
+    color: var(--accent);
+    padding: 0 0.2rem;
+    font-size: 0.8rem;
+  }
+  .chain-item.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* ── HOW IT WORKS ── */
+  .guide-block {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border2);
+  }
+  .guide-block:last-child { border-bottom: none; }
+  .guide-block h3 {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+  }
+  .guide-block p {
+    font-size: 0.9rem;
+    font-weight: 300;
+    color: var(--text2);
+    line-height: 1.7;
+    max-width: 680px;
+  }
+
+  /* ── MATH DISPLAY ── */
+  .math-block {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-left: 3px solid var(--accent);
+    padding: 0.9rem 1.2rem;
+    margin: 0.8rem 0;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text2);
+    line-height: 1.7;
+    border-radius: 0 3px 3px 0;
+    overflow-x: auto;
+  }
+
+  /* ── SOURCES ── */
+  .source-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1px;
+    background: var(--border2);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .source-card {
+    background: var(--card);
+    padding: 1.1rem 1.2rem;
+  }
+  .source-name {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+  }
+  .source-desc {
+    font-size: 0.8rem;
+    font-weight: 300;
+    color: var(--text3);
+    line-height: 1.5;
+    margin-bottom: 0.4rem;
+  }
+  .source-tag {
+    font-family: var(--mono);
+    font-size: 0.63rem;
+    color: var(--accent2);
+  }
+
+  /* ── CITE ── */
+  .cite-tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--border2);
+    margin-bottom: 0;
+  }
+  .cite-tab {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    color: var(--text3);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    background: none; border: none;
+    border-bottom: 2px solid transparent;
+  }
+  .cite-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .cite-panel {
+    display: none;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-top: none;
+    padding: 1rem 1.2rem;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--text2);
+    line-height: 1.7;
+    border-radius: 0 0 4px 4px;
+    position: relative;
+  }
+  .cite-panel.active { display: block; }
+  .copy-btn {
+    position: absolute; top: 0.8rem; right: 0.8rem;
+    font-family: var(--mono); font-size: 0.65rem;
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text3); padding: 0.2rem 0.6rem;
+    cursor: pointer; border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    padding: 1.2rem 2rem;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text3);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 0.5rem;
+    letter-spacing: 0.03em;
+  }
+  footer a { color: var(--text3); text-decoration: none; }
+  footer a:hover { color: var(--accent); }
+
+  /* ── TRILEMMA SVG MOTIF ── */
+  .hero-motif {
+    position: absolute; right: 0; top: 0;
+    width: 340px; height: 340px;
+    opacity: 0.04;
+    pointer-events: none;
+  }
+
+  .hero-wrap { position: relative; overflow: hidden; }
+
+  @media (max-width: 640px) {
+    nav { padding: 0.6rem 1rem; }
+    .hero { padding: 3rem 1rem 2rem; }
+    .content { padding: 0 1rem 3rem; }
+    .stats { gap: 1.2rem; }
+    .hero-motif { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-left">
+    <span class="nav-brand">SPIA · VT | <span>JUNO</span></span>
+    <div class="nav-links">
+      <a href="#tabs">Tabs</a>
+      <a href="#chain">Chain</a>
+      <a href="#sources">Sources</a>
+      <a href="#guide">Guide</a>
+      <a href="#cite">Cite</a>
+    </div>
+  </div>
+  <div class="nav-right">
+    <span class="nav-version">v1.0 · Apr 2026</span>
+    <a href="https://github.com/davidbieri/juno" style="font-family:var(--mono);font-size:0.72rem;color:var(--text3);text-decoration:none;" target="_blank">GitHub ↗</a>
+    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">◐</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero-wrap">
+  <div class="hero">
+    <!-- Background trilemma motif -->
+    <svg class="hero-motif" viewBox="0 0 300 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="150,20 290,245 10,245" stroke="currentColor" stroke-width="2" fill="none"/>
+      <line x1="150" y1="20" x2="150" y2="245" stroke="currentColor" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="10" y1="245" x2="220" y2="132" stroke="currentColor" stroke-width="1" stroke-dasharray="4,4"/>
+      <line x1="290" y1="245" x2="80" y2="132" stroke="currentColor" stroke-width="1" stroke-dasharray="4,4"/>
+      <circle cx="150" cy="20" r="6" fill="currentColor"/>
+      <circle cx="290" cy="245" r="6" fill="currentColor"/>
+      <circle cx="10" cy="245" r="6" fill="currentColor"/>
+    </svg>
+
+    <div class="hero-eyebrow">David Bieri &nbsp;·&nbsp; SPIA · Virginia Tech &nbsp;·&nbsp; GSE Reform Analytics</div>
+
+    <h1>JUNO: <em>A Trilemma Framework<br>for GSE Reform Analytics</em></h1>
+
+    <blockquote class="hero-epigraph">
+      No reform mechanism can simultaneously achieve market discipline, systemic stability, and implementation simplicity. More than a policy choice problem — a temporal trap where prioritizing one objective initiates processes that eventually eliminate access to all three.
+    </blockquote>
+
+    <p class="hero-desc">
+      A browser-native implementation of the GSE reform trilemma framework: fourteen policy options evaluated across mechanism design criteria, regulatory complexity, and stakeholder consensus; three agent-based simulations revealing the structural constraints on each trilemma vertex; and a temporal trap model demonstrating why reform became structurally impossible at year 12 of the conservatorship. No build step. No server. No dependencies.
+    </p>
+
+    <div class="stats">
+      <div class="stat"><span class="stat-n">9</span><span class="stat-label">analytical tabs</span></div>
+      <div class="stat"><span class="stat-n">14</span><span class="stat-label">reform options</span></div>
+      <div class="stat"><span class="stat-n">3</span><span class="stat-label">simulations</span></div>
+      <div class="stat"><span class="stat-n">5</span><span class="stat-label">stakeholder scenarios</span></div>
+      <div class="stat"><span class="stat-n">17</span><span class="stat-label">years in conservatorship</span></div>
+    </div>
+
+    <div class="cta-row">
+      <a href="juno.html" class="btn-primary">⟶ Launch Tool</a>
+      <a href="https://github.com/davidbieri/juno" class="btn-secondary" target="_blank">View on GitHub ↗</a>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="content">
+
+  <!-- TABS -->
+  <div class="section-anchor" id="tabs">
+    <div class="section-label">Nine analytical tabs</div>
+    <div class="section-title">The Signal Chain</div>
+  </div>
+
+  <div class="tab-grid">
+    <div class="tab-group-label">Empirical &amp; Taxonomic Layers</div>
+
+    <div class="tab-card">
+      <div class="tab-num">01 —</div>
+      <div class="tab-body">
+        <div class="tab-name">Reform Options</div>
+        <div class="tab-headline">Scoring &amp; Stakeholder Reranking</div>
+        <div class="tab-desc">Fourteen reform options across five categories scored on mechanism design criteria, regulatory complexity, and consensus. Five stakeholder weight sliders — Progressive, Libertarian, Federal Reserve, Political Feasibility, Housing Advocacy — dynamically rerank all options. The source of truth for all downstream tabs.</div>
+      </div>
+    </div>
+
+    <div class="tab-card">
+      <div class="tab-num">02 —</div>
+      <div class="tab-body">
+        <div class="tab-name">Complexity</div>
+        <div class="tab-headline">The Inverse Relationship</div>
+        <div class="tab-desc">Scatter plot of all 14 options: regulatory complexity score (x-axis) against stakeholder consensus score (y-axis). The inverse relationship — administratively feasible options score 20–30 and achieve highest consensus; legislatively superior options score 70–80 and remain politically stalled — is the tool's core empirical finding. Per-option five-dimensional radar charts available on hover.</div>
+      </div>
+    </div>
+
+    <div class="tab-card">
+      <div class="tab-num">03 —</div>
+      <div class="tab-body">
+        <div class="tab-name">Mechanism Design</div>
+        <div class="tab-headline">A–D Grade Matrix</div>
+        <div class="tab-desc">Heat map of all 14 options graded across four mechanism design criteria: incentive compatibility, information revelation, participation constraints, and efficiency. The central tension: FMIC grades A across all dimensions but is unimplementable; the Hybrid Utility-Competition Model grades C+ but is the most robust implementable option.</div>
+      </div>
+    </div>
+
+    <div class="tab-card">
+      <div class="tab-num">04 —</div>
+      <div class="tab-body">
+        <div class="tab-name">Pathways</div>
+        <div class="tab-headline">Dynamic Quality Trajectories</div>
+        <div class="tab-desc">Reform quality trajectories for all 14 options over a 20-year horizon, computed using logistic growth functions, regulatory capture models, and degradation effects. Three-source confidence bands: parameter uncertainty, model specification uncertainty, and scenario uncertainty. Category filter isolates Administrative, Legislative Moderate, or Comprehensive options.</div>
+      </div>
+    </div>
+
+    <div class="tab-group-label">Simulation &amp; Trilemma Layers</div>
+
+    <div class="tab-card">
+      <div class="tab-num">05 —</div>
+      <div class="tab-body">
+        <div class="tab-name">Trilemma</div>
+        <div class="tab-headline">The Temporal Trap</div>
+        <div class="tab-desc">The trilemma triangle with all 14 options at their computed positions across the three vertices: market discipline, systemic stability, implementation simplicity. A temporal slider (2008–2025+) shows four-phase evolution of the achievable zone. Amber compare overlay holds a second option for parallel analysis — the tool's theoretical centerpiece.</div>
+      </div>
+    </div>
+
+    <div class="tab-card">
+      <div class="tab-num">06 —</div>
+      <div class="tab-body">
+        <div class="tab-name">Lock-In Clock</div>
+        <div class="tab-headline">Path Dependence Accumulation · Simulation 3</div>
+        <div class="tab-desc">Four lock-in mechanisms accumulating over 17 years: learning effects (power law), coordination network externalities (exponential, dominant from year 10), adaptive expectations (linear with calibrated shock jumps at 2012, 2019, 2025), and sunk costs (logarithmic). Critical threshold at year 12 (~2020). Current reform cost: 7.3× the political feasibility limit.</div>
+      </div>
+    </div>
+
+    <div class="tab-card">
+      <div class="tab-num">07 —</div>
+      <div class="tab-body">
+        <div class="tab-name">Coordination</div>
+        <div class="tab-headline">N-Player Game · Simulation 2</div>
+        <div class="tab-desc">Interactive agency selector: check or uncheck any of the twelve regulatory agencies and watch the Nash equilibrium success probability update in real time via P(success) ≈ p^N. Three agencies with negative benefit coefficients (HUD, SEC, CFPB) distinctly marked — they rationally shirk because they lose authority in reform. Each additional agency reduces success by approximately 10 percentage points.</div>
+      </div>
+    </div>
+
+    <div class="tab-card">
+      <div class="tab-num">08 —</div>
+      <div class="tab-body">
+        <div class="tab-name">Complementarities</div>
+        <div class="tab-headline">Institutional Network · Simulation 1</div>
+        <div class="tab-desc">Pre-computed outputs from the six-institution complementarity ODE model. Network diagram with edge weights proportional to κ_ij. Isolated reform trajectory showing 28% equilibrium and 23% system fitness drop. Time-varying strengthening results across years 5–20 (68% to 8% reform success). Full ODE derivation and Radau solver implementation in technical appendix.</div>
+      </div>
+    </div>
+
+    <div class="tab-card">
+      <div class="tab-num">09 —</div>
+      <div class="tab-body">
+        <div class="tab-name">Scenarios</div>
+        <div class="tab-headline">Counterfactuals &amp; Proposal Analyzer</div>
+        <div class="tab-desc">Six historical counterfactuals rerun path dependence accumulation from each intervention date: Corker-Warner (2014), Johnson-Crapo (2015), Trump Recap &amp; Release (2020), Biden acts (2022), new legislative window (2027), user-defined. AI-powered Proposal Analyzer (Anthropic API) scores new reform proposals against the full rubric in real time.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGNAL CHAIN -->
+  <div class="section-anchor" id="chain">
+    <div class="section-label">How the tabs connect</div>
+    <div class="section-title">Signal Chain</div>
+  </div>
+
+  <div class="guide-block">
+    <p>JUNO is a signal chain, not a dashboard. Each tab adds one analytical layer to a shared understanding of GSE reform constraints, answering a single question at each stage. The chain runs from taxonomic description through simulation evidence, culminating in scenario projection.</p>
+  </div>
+
+  <div class="chain">
+    <div class="chain-item">01 Reform Options</div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-item">02 Complexity</div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-item">03 Mechanism Design</div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-item">04 Pathways</div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-item">05 Trilemma</div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-item">06 Lock-In Clock</div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-item">07 Coordination</div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-item">08 Complementarities</div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-item">09 Scenarios</div>
+  </div>
+
+  <!-- GUIDE -->
+  <div class="section-anchor" id="guide">
+    <div class="section-label">How it works</div>
+    <div class="section-title">Methodology</div>
+  </div>
+
+  <div class="guide-block">
+    <h3>The Trilemma</h3>
+    <p>No GSE reform mechanism can simultaneously achieve market discipline (competition, price discovery, private risk-bearing), systemic stability (30-year FRM availability, TBA market liquidity, catastrophic government backstop), and implementation simplicity (administrative feasibility, short timelines, minimal inter-agency coordination). Policymakers must sacrifice at least one vertex. But the trilemma is not a static choice: three simulations reveal it is a temporal trap where prioritizing one vertex initiates processes that eventually eliminate access to all three.</p>
+  </div>
+
+  <div class="guide-block">
+    <h3>Simulation 1 — Institutional Complementarities (Tab 08)</h3>
+    <p>The GSE structure is embedded in a six-institution complementarity network. System fitness is the sum of pairwise alignment terms. Attempting isolated reform decreases system fitness by 23%, limiting effectiveness to 28% of target. The complementarity matrix κ_ij strengthens during conservatorship — by year 17, even comprehensive reform faces critical resistance.</p>
+    <div class="math-block">
+Fitness = Σᵢ Σⱼ κᵢⱼ × (1 − |sᵢ − sⱼ|)
+Δsᵢ(t) = αᵢ × ∂Fitness/∂sᵢ − cᵢ × (sᵢ − sᵢ,initial)
+κᵢⱼ(t) = κᵢⱼ(0) × (1 + 0.03t)    [time-varying strengthening]
+    </div>
+  </div>
+
+  <div class="guide-block">
+    <h3>Simulation 2 — Coordination Game (Tab 07)</h3>
+    <p>GSE reform is modeled as an N-player coordination game. Each agency chooses effort to maximize its own payoff given others' choices. Three agencies (HUD, SEC, CFPB) have negative benefit parameters and rationally shirk. Success probability scales exponentially with N — each additional required agency reduces success by approximately 10 percentage points.</p>
+    <div class="math-block">
+P(success) ≈ p^N    where p ≈ 0.85 (mean coordination probability)
+N=2  (Administrative):    85% success
+N=9  (Multiple Guarantors): 23% success
+N=12 (FMIC):              12% success
+    </div>
+  </div>
+
+  <div class="guide-block">
+    <h3>Simulation 3 — Lock-In Accumulation (Tab 06)</h3>
+    <p>Lock-in strength L(t) aggregates four mechanisms weighted by their contribution to path dependence. Reform cost grows with L(t). The political feasibility limit is fixed at 150 arbitrary units. When reform cost exceeds this limit — at year 12 of conservatorship, approximately 2020 — reform becomes structurally impossible regardless of political will.</p>
+    <div class="math-block">
+L(t) = α·Learning(t) + β·Coordination(t) + γ·Expectations(t) + δ·Sunk_costs(t)
+     [weights: α=1.5, β=2.0 (network externalities dominant), γ=1.8, δ=1.2]
+
+Reform_cost(t) = 50 × [1 + 1.5 × L(t)]
+Critical threshold: Reform_cost(t*) = 150   →   t* ≈ year 12 (2020)
+Current (year 17): Reform_cost = 1,090   →   7.3× feasibility limit
+    </div>
+  </div>
+
+  <div class="guide-block">
+    <h3>Data and Scoring</h3>
+    <p>All mechanism design grades, regulatory complexity scores, and consensus scores are computed outputs from the analytical framework underlying Bieri (2026), manuscript in preparation for <em>Socio-Economic Review</em>. Scores are fixed; stakeholder weighting sliders apply five pre-specified weight vectors to the fixed underlying scores. Simulation 1 results are pre-computed Python outputs (Radau stiff ODE solver). Simulations 2 and 3 run live in the browser using closed-form JS implementations.</p>
+  </div>
+
+  <!-- SOURCES -->
+  <div class="section-anchor" id="sources">
+    <div class="section-label">Analytical foundations</div>
+    <div class="section-title">Theoretical Sources</div>
+  </div>
+
+  <div class="source-grid">
+    <div class="source-card">
+      <div class="source-name">Hall &amp; Soskice (2001)</div>
+      <div class="source-desc">Varieties of Capitalism. Institutional complementarities framework underlying Simulation 1.</div>
+      <div class="source-tag">VoC · Complementarities · Tab 08</div>
+    </div>
+    <div class="source-card">
+      <div class="source-name">Pierson (2004)</div>
+      <div class="source-desc">Politics in Time. Increasing returns to political institutions; path dependence and critical thresholds.</div>
+      <div class="source-tag">Path Dependence · Tab 06</div>
+    </div>
+    <div class="source-card">
+      <div class="source-name">Ostrom (1990)</div>
+      <div class="source-desc">Governing the Commons. Collective action and polycentric governance; coordination game foundations.</div>
+      <div class="source-tag">Coordination · Tab 07</div>
+    </div>
+    <div class="source-card">
+      <div class="source-name">Tinbergen (1952)</div>
+      <div class="source-desc">On the Theory of Economic Policy. N-targets / N-instruments rule — the trilemma's theoretical ancestor.</div>
+      <div class="source-tag">Trilemma · Tab 05</div>
+    </div>
+    <div class="source-card">
+      <div class="source-name">Crouch (2011)</div>
+      <div class="source-desc">Strange Non-Death of Neoliberalism. Systems persisting despite satisfying no theoretical ideal.</div>
+      <div class="source-tag">Temporal Trap · Tab 05</div>
+    </div>
+    <div class="source-card">
+      <div class="source-name">Bieri (2026)</div>
+      <div class="source-desc">The GSE Reform Trilemma: A Temporal Trap. Manuscript in preparation, Socio-Economic Review.</div>
+      <div class="source-tag">Primary Source · All Tabs</div>
+    </div>
+  </div>
+
+  <!-- CITE -->
+  <div class="section-anchor" id="cite">
+    <div class="section-label">Cite this tool</div>
+    <div class="section-title">Citation</div>
+  </div>
+
+  <div class="cite-tabs">
+    <button class="cite-tab active" onclick="showCite('apa',this)">APA</button>
+    <button class="cite-tab" onclick="showCite('bib',this)">BibTeX</button>
+    <button class="cite-tab" onclick="showCite('chi',this)">Chicago</button>
+  </div>
+
+  <div class="cite-panel active" id="cite-apa">
+    <button class="copy-btn" onclick="copyCite('cite-apa')">Copy</button>
+    Bieri, D. (2026). <em>JUNO: A Trilemma Framework for GSE Reform Analytics</em> (v1.0) [Interactive tool]. Virginia Tech School of Public and International Affairs. GitHub. https://github.com/davidbieri/juno
+  </div>
+
+  <div class="cite-panel" id="cite-bib">
+    <button class="copy-btn" onclick="copyCite('cite-bib')">Copy</button>
+@software{bieri2026juno,
+  author      = {Bieri, David},
+  title       = {{JUNO}: A Trilemma Framework for {GSE} Reform Analytics},
+  year        = {2026},
+  version     = {1.0},
+  institution = {Virginia Tech School of Public and International Affairs},
+  publisher   = {GitHub},
+  url         = {https://github.com/davidbieri/juno},
+  note        = {Trilemma framework, three agent-based simulations,
+                 institutional complementarities, coordination game,
+                 path dependence accumulation, temporal trap dynamics}
+}
+  </div>
+
+  <div class="cite-panel" id="cite-chi">
+    <button class="copy-btn" onclick="copyCite('cite-chi')">Copy</button>
+    Bieri, David. 2026. "JUNO: A Trilemma Framework for GSE Reform Analytics." v1.0. Interactive tool. Virginia Tech School of Public and International Affairs. GitHub. https://github.com/davidbieri/juno.
+  </div>
+
+</div><!-- /content -->
+
+<!-- FOOTER -->
+<footer>
+  <span>david bieri · SPIA · Virginia Tech · JUNO v1.0 · MIT License</span>
+  <span>
+    <a href="https://www.david-bieri.com" target="_blank">david-bieri.com</a> ·
+    <a href="https://circular-flows.org" target="_blank">circular-flows.org</a> ·
+    <a href="https://august-loesch.org" target="_blank">august-loesch.org</a> ·
+    <a href="https://github.com/davidbieri/juno" target="_blank">GitHub ↗</a> ·
+    <a href="juno.html">Tool</a> ·
+    <a href="#cite">Cite</a>
+  </span>
+  <span>For educational and research purposes only. Not financial or legal advice.</span>
+</footer>
+
+<script>
+  // Theme toggle
+  function toggleTheme() {
+    const d = document.documentElement;
+    d.setAttribute('data-theme', d.getAttribute('data-theme') === 'dark' ? '' : 'dark');
+  }
+
+  // Citation tabs
+  function showCite(id, btn) {
+    document.querySelectorAll('.cite-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.cite-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('cite-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // Copy citation
+  function copyCite(id) {
+    const text = document.getElementById(id).innerText.replace('Copy','').trim();
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector('#' + id + ' .copy-btn');
+      btn.textContent = 'Copied ✓';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+</script>
+</body>
+</html>

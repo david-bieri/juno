@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JUNO · GSE Reform Trilemma Analytics · v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Spectral+SC:wght@400;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+:root {
+  --bg:     #f5f1ea;
+  --bg2:    #ede9e0;
+  --bg3:    #e4dfd4;
+  --text:   #1c1917;
+  --text2:  #44403c;
+  --text3:  #78716c;
+  --accent: #8b3a0f;
+  --acc2:   #b45309;
+  --border: #c7c0b4;
+  --brd2:   #d6d0c7;
+  --card:   #faf8f4;
+  --green:  #166534;
+  --amber:  #92400e;
+  --red:    #991b1b;
+  --mono:   'JetBrains Mono', monospace;
+  --serif:  'Spectral', Georgia, serif;
+  --sc:     'Spectral SC', serif;
+}
+[data-theme="dark"] {
+  --bg:     #141210;
+  --bg2:    #1c1917;
+  --bg3:    #28231f;
+  --text:   #f0ebe3;
+  --text2:  #c8bfb5;
+  --text3:  #8a7f76;
+  --accent: #c2693a;
+  --acc2:   #d97706;
+  --border: #3a342e;
+  --brd2:   #2e2924;
+  --card:   #1f1c18;
+  --green:  #4ade80;
+  --amber:  #fbbf24;
+  --red:    #f87171;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;height:100%}
+body{font-family:var(--serif);background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100%;transition:background .3s,color .3s}
+
+/* ── TOP BAR ── */
+#topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:0 1.2rem;height:40px;flex-shrink:0;
+  font-family:var(--mono);font-size:0.68rem;letter-spacing:.03em;
+}
+.tb-brand{font-weight:500;color:var(--text)}
+.tb-brand span{color:var(--accent)}
+.tb-right{display:flex;align-items:center;gap:1rem}
+.tb-right a{color:var(--text3);text-decoration:none}
+.tb-right a:hover{color:var(--accent)}
+.tb-version{color:var(--text3)}
+.theme-btn{background:none;border:1px solid var(--border);color:var(--text2);cursor:pointer;padding:.2rem .45rem;border-radius:3px;font-family:var(--mono);font-size:.68rem;transition:all .2s}
+.theme-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── TAB NAV ── */
+#tabnav{
+  display:flex;align-items:stretch;
+  background:var(--bg2);border-bottom:2px solid var(--border);
+  overflow-x:auto;flex-shrink:0;
+}
+#tabnav::-webkit-scrollbar{height:3px}
+#tabnav::-webkit-scrollbar-thumb{background:var(--border)}
+.tnav-btn{
+  background:none;border:none;cursor:pointer;
+  font-family:var(--mono);font-size:.63rem;letter-spacing:.05em;
+  color:var(--text3);padding:.55rem 1.1rem;
+  border-bottom:2px solid transparent;margin-bottom:-2px;
+  white-space:nowrap;transition:all .2s;
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+}
+.tnav-btn .tn-num{font-size:.55rem;color:var(--accent);opacity:.7}
+.tnav-btn .tn-label{font-size:.63rem}
+.tnav-btn:hover{color:var(--text2);border-bottom-color:var(--brd2)}
+.tnav-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── MAIN AREA ── */
+#main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.tab-panel{display:none;flex:1;overflow-y:auto;padding:1.4rem 1.6rem}
+.tab-panel.active{display:flex;flex-direction:column}
+
+/* ── GENERIC COMPONENTS ── */
+.panel-title{
+  font-family:var(--serif);font-size:1.3rem;font-weight:300;
+  color:var(--text);margin-bottom:.25rem;
+}
+.panel-sub{
+  font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:.9rem;
+}
+.panel-desc{
+  font-size:.875rem;font-weight:300;color:var(--text2);
+  line-height:1.7;max-width:720px;margin-bottom:1.2rem;
+}
+.divider{height:1px;background:var(--brd2);margin:1.2rem 0}
+.row{display:flex;gap:1rem;flex-wrap:wrap}
+.col{flex:1;min-width:220px}
+
+/* ── STAT CARDS ── */
+.stat-row{display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.stat-card{
+  background:var(--card);border:1px solid var(--brd2);
+  border-radius:4px;padding:.65rem .9rem;min-width:110px;
+  font-family:var(--mono);
+}
+.sc-val{font-size:1.4rem;font-weight:500;color:var(--accent);line-height:1}
+.sc-label{font-size:.6rem;color:var(--text3);letter-spacing:.04em;margin-top:.2rem}
+.sc-sub{font-size:.58rem;color:var(--text3);margin-top:.1rem}
+
+/* ── REFORM TABLE ── */
+.reform-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:4px}
+table.rtable{
+  width:100%;border-collapse:collapse;
+  font-family:var(--mono);font-size:.68rem;
+}
+.rtable th{
+  background:var(--bg3);color:var(--text3);
+  padding:.45rem .7rem;text-align:left;
+  border-bottom:1px solid var(--border);
+  letter-spacing:.04em;font-weight:500;white-space:nowrap;
+}
+.rtable td{
+  padding:.4rem .7rem;border-bottom:1px solid var(--brd2);
+  vertical-align:middle;white-space:nowrap;
+}
+.rtable tr:last-child td{border-bottom:none}
+.rtable tr:hover td{background:var(--bg2)}
+.cat-header td{
+  background:var(--bg3);font-size:.6rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--text3);
+  padding:.3rem .7rem;border-bottom:1px solid var(--border);
+}
+.rank-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:1.4rem;height:1.4rem;border-radius:50%;
+  background:var(--accent);color:#fff;
+  font-size:.6rem;font-weight:500;
+}
+.grade{
+  display:inline-block;padding:.1rem .35rem;border-radius:2px;
+  font-weight:500;font-size:.65rem;
+}
+.grade-A{background:#dcfce7;color:#166534}
+.grade-B{background:#dbeafe;color:#1d4ed8}
+.grade-C{background:#fef3c7;color:#92400e}
+.grade-D{background:#fee2e2;color:#991b1b}
+[data-theme="dark"] .grade-A{background:#14532d;color:#4ade80}
+[data-theme="dark"] .grade-B{background:#1e3a5f;color:#93c5fd}
+[data-theme="dark"] .grade-C{background:#451a03;color:#fbbf24}
+[data-theme="dark"] .grade-D{background:#450a0a;color:#f87171}
+
+/* ── SLIDERS PANEL ── */
+.slider-panel{
+  background:var(--card);border:1px solid var(--brd2);
+  border-radius:4px;padding:1rem 1.1rem;margin-bottom:1.2rem;
+}
+.slider-panel h4{
+  font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--text3);margin-bottom:.8rem;
+}
+.slider-row{
+  display:flex;align-items:center;gap:.8rem;margin-bottom:.55rem;
+}
+.slider-row label{
+  font-family:var(--mono);font-size:.67rem;color:var(--text2);
+  width:140px;flex-shrink:0;
+}
+.slider-row input[type=range]{
+  flex:1;accent-color:var(--accent);cursor:pointer;
+}
+.slider-val{
+  font-family:var(--mono);font-size:.67rem;color:var(--accent);
+  width:2.5rem;text-align:right;
+}
+
+/* ── SVG CHARTS ── */
+.chart-wrap{
+  background:var(--card);border:1px solid var(--brd2);
+  border-radius:4px;overflow:hidden;
+}
+.chart-title{
+  font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--text3);
+  padding:.55rem .9rem;border-bottom:1px solid var(--brd2);
+}
+svg text{font-family:var(--mono)}
+
+/* ── TRILEMMA TRIANGLE ── */
+#trilemma-svg{width:100%;max-width:480px;height:auto}
+
+/* ── AGENCY SELECTOR ── */
+.agency-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:.5rem;margin-bottom:1rem;
+}
+.agency-item{
+  display:flex;align-items:center;gap:.5rem;
+  background:var(--card);border:1px solid var(--brd2);
+  border-radius:3px;padding:.4rem .6rem;cursor:pointer;
+  transition:all .15s;
+}
+.agency-item:hover{border-color:var(--accent)}
+.agency-item.selected{border-color:var(--accent);background:var(--bg3)}
+.agency-item.negative{border-color:var(--red);opacity:.85}
+.agency-item.negative.selected{background:#fee2e2}
+[data-theme="dark"] .agency-item.negative.selected{background:#450a0a}
+.agency-cb{width:.85rem;height:.85rem;accent-color:var(--accent)}
+.agency-name{font-family:var(--mono);font-size:.65rem;color:var(--text2)}
+.agency-neg-tag{font-size:.55rem;color:var(--red)}
+
+/* ── LOCKUP METER ── */
+.meter-wrap{
+  background:var(--card);border:1px solid var(--brd2);
+  border-radius:4px;padding:1rem 1.2rem;
+}
+.meter-bar-bg{
+  height:12px;background:var(--bg3);border-radius:6px;
+  overflow:hidden;margin:.5rem 0;
+}
+.meter-bar-fill{
+  height:100%;border-radius:6px;
+  background:linear-gradient(90deg,var(--green),var(--amber),var(--red));
+  transition:width .4s ease;
+}
+.meter-labels{
+  display:flex;justify-content:space-between;
+  font-family:var(--mono);font-size:.6rem;color:var(--text3);
+}
+
+/* ── PATHWAY CHART ── */
+#pathway-svg{width:100%;height:300px}
+
+/* ── SCENARIO CARDS ── */
+.scenario-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:.7rem;margin-bottom:1.2rem;
+}
+.scenario-card{
+  background:var(--card);border:1px solid var(--brd2);
+  border-radius:4px;padding:.8rem .9rem;cursor:pointer;
+  transition:all .15s;
+}
+.scenario-card:hover,.scenario-card.active{
+  border-color:var(--accent);
+}
+.sc-year{font-family:var(--mono);font-size:.65rem;color:var(--accent)}
+.sc-name{font-family:var(--serif);font-size:.9rem;color:var(--text);margin:.15rem 0}
+.sc-brief{font-size:.78rem;color:var(--text3);font-weight:300}
+
+/* ── PROPOSAL ANALYZER ── */
+.analyzer-wrap{
+  background:var(--card);border:1px solid var(--brd2);
+  border-radius:4px;padding:1.1rem 1.2rem;
+}
+.analyzer-wrap textarea{
+  width:100%;min-height:100px;
+  background:var(--bg2);border:1px solid var(--border);
+  color:var(--text);font-family:var(--serif);font-size:.875rem;
+  padding:.6rem .8rem;border-radius:3px;resize:vertical;
+  outline:none;transition:border .2s;line-height:1.6;
+}
+.analyzer-wrap textarea:focus{border-color:var(--accent)}
+.btn-analyze{
+  margin-top:.7rem;
+  background:var(--accent);color:#fff;border:none;cursor:pointer;
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;
+  padding:.55rem 1.2rem;border-radius:3px;transition:background .2s;
+}
+.btn-analyze:hover{background:var(--acc2)}
+.btn-analyze:disabled{opacity:.5;cursor:not-allowed}
+.analysis-result{
+  margin-top:.9rem;
+  background:var(--bg2);border:1px solid var(--brd2);
+  border-left:3px solid var(--accent);
+  padding:.8rem 1rem;border-radius:0 3px 3px 0;
+  font-size:.85rem;color:var(--text2);line-height:1.7;font-weight:300;
+}
+
+/* ── HEAT MAP ── */
+.heatmap-wrap{overflow-x:auto}
+table.hmap{border-collapse:collapse;font-family:var(--mono);font-size:.65rem}
+.hmap th{
+  padding:.4rem .6rem;background:var(--bg3);
+  color:var(--text3);text-align:center;border:1px solid var(--border);
+  white-space:nowrap;letter-spacing:.03em;
+}
+.hmap td{
+  padding:.4rem .6rem;border:1px solid var(--brd2);
+  text-align:center;font-weight:500;
+}
+.hmap .row-label{text-align:left;color:var(--text2);background:var(--card);white-space:nowrap}
+
+/* SCROLLBAR */
+.tab-panel::-webkit-scrollbar{width:5px}
+.tab-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+@media(max-width:640px){
+  .tab-panel{padding:1rem}
+  .slider-row label{width:100px;font-size:.6rem}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <span class="tb-brand">SPIA · VT | <span>JUNO</span> &nbsp;·&nbsp; GSE Reform Trilemma Analytics</span>
+  <div class="tb-right">
+    <span class="tb-version">v1.0 · Apr 2026</span>
+    <a href="index.html">← Landing</a>
+    <a href="https://github.com/davidbieri/juno" target="_blank">GitHub ↗</a>
+    <button class="theme-btn" onclick="toggleTheme()">◐</button>
+  </div>
+</div>
+
+<!-- TAB NAV -->
+<div id="tabnav">
+  <button class="tnav-btn active" onclick="showTab('t01',this)"><span class="tn-num">01 —</span><span class="tn-label">REFORM OPTIONS</span></button>
+  <button class="tnav-btn" onclick="showTab('t02',this)"><span class="tn-num">02 —</span><span class="tn-label">COMPLEXITY</span></button>
+  <button class="tnav-btn" onclick="showTab('t03',this)"><span class="tn-num">03 —</span><span class="tn-label">MECHANISM DESIGN</span></button>
+  <button class="tnav-btn" onclick="showTab('t04',this)"><span class="tn-num">04 —</span><span class="tn-label">PATHWAYS</span></button>
+  <button class="tnav-btn" onclick="showTab('t05',this)"><span class="tn-num">05 —</span><span class="tn-label">TRILEMMA</span></button>
+  <button class="tnav-btn" onclick="showTab('t06',this)"><span class="tn-num">06 —</span><span class="tn-label">LOCK-IN CLOCK</span></button>
+  <button class="tnav-btn" onclick="showTab('t07',this)"><span class="tn-num">07 —</span><span class="tn-label">COORDINATION</span></button>
+  <button class="tnav-btn" onclick="showTab('t08',this)"><span class="tn-num">08 —</span><span class="tn-label">COMPLEMENTARITIES</span></button>
+  <button class="tnav-btn" onclick="showTab('t09',this)"><span class="tn-num">09 —</span><span class="tn-label">SCENARIOS</span></button>
+</div>
+
+<div id="main">
+
+<!-- ═══════════════════════════════════════════════
+     TAB 01 — REFORM OPTIONS
+═══════════════════════════════════════════════ -->
+<div id="t01" class="tab-panel active">
+  <div class="panel-sub">Tab 01 · Source of Truth</div>
+  <div class="panel-title">Reform Options — Scoring &amp; Stakeholder Reranking</div>
+  <div class="panel-desc">Fourteen reform options scored on mechanism design, regulatory complexity, and stakeholder consensus. Adjust stakeholder weights to rerank options in real time. The displayed rank reflects weighted composite score under your selected perspective.</div>
+
+  <div class="slider-panel">
+    <h4>Stakeholder Weight Scenario</h4>
+    <div class="slider-row">
+      <label>Progressive / Consumer</label>
+      <input type="range" min="0" max="100" value="20" oninput="updateWeights()" id="w-prog">
+      <span class="slider-val" id="wv-prog">20</span>
+    </div>
+    <div class="slider-row">
+      <label>Libertarian / Free-Market</label>
+      <input type="range" min="0" max="100" value="20" oninput="updateWeights()" id="w-lib">
+      <span class="slider-val" id="wv-lib">20</span>
+    </div>
+    <div class="slider-row">
+      <label>Financial Stability / Fed</label>
+      <input type="range" min="0" max="100" value="20" oninput="updateWeights()" id="w-fed">
+      <span class="slider-val" id="wv-fed">20</span>
+    </div>
+    <div class="slider-row">
+      <label>Political Feasibility</label>
+      <input type="range" min="0" max="100" value="20" oninput="updateWeights()" id="w-pol">
+      <span class="slider-val" id="wv-pol">20</span>
+    </div>
+    <div class="slider-row">
+      <label>Housing Advocacy</label>
+      <input type="range" min="0" max="100" value="20" oninput="updateWeights()" id="w-hous">
+      <span class="slider-val" id="wv-hous">20</span>
+    </div>
+    <div style="display:flex;gap:.6rem;margin-top:.6rem;flex-wrap:wrap">
+      <button onclick="setPreset('equal')" style="font-family:var(--mono);font-size:.62rem;padding:.25rem .6rem;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:2px">Equal</button>
+      <button onclick="setPreset('prog')" style="font-family:var(--mono);font-size:.62rem;padding:.25rem .6rem;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:2px">Progressive</button>
+      <button onclick="setPreset('lib')" style="font-family:var(--mono);font-size:.62rem;padding:.25rem .6rem;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:2px">Libertarian</button>
+      <button onclick="setPreset('fed')" style="font-family:var(--mono);font-size:.62rem;padding:.25rem .6rem;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:2px">Federal Reserve</button>
+      <button onclick="setPreset('pol')" style="font-family:var(--mono);font-size:.62rem;padding:.25rem .6rem;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:2px">Political</button>
+    </div>
+  </div>
+
+  <div class="reform-table-wrap">
+    <table class="rtable" id="reform-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Option</th>
+          <th>Category</th>
+          <th>MkDiscipline</th>
+          <th>SysStability</th>
+          <th>ImplSimplicity</th>
+          <th>Complexity</th>
+          <th>Consensus</th>
+          <th>W.Score</th>
+        </tr>
+      </thead>
+      <tbody id="reform-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 02 — COMPLEXITY
+═══════════════════════════════════════════════ -->
+<div id="t02" class="tab-panel">
+  <div class="panel-sub">Tab 02 · Empirical Finding</div>
+  <div class="panel-title">Complexity — The Inverse Relationship</div>
+  <div class="panel-desc">Administratively feasible options scoring 20–30 on regulatory complexity achieve the highest stakeholder consensus. Legislatively superior options scoring 70–80 remain politically stalled. This inverse relationship is a structural finding, not a political contingency.</div>
+
+  <div class="stat-row">
+    <div class="stat-card"><div class="sc-val">20–30</div><div class="sc-label">Feasible zone</div><div class="sc-sub">complexity score</div></div>
+    <div class="stat-card"><div class="sc-val">70–80</div><div class="sc-label">Stalled zone</div><div class="sc-sub">complexity score</div></div>
+    <div class="stat-card"><div class="sc-val">11.6</div><div class="sc-label">Peak consensus</div><div class="sc-sub">Hybrid Utility-Competition</div></div>
+    <div class="stat-card"><div class="sc-val">3.8</div><div class="sc-label">Lowest consensus</div><div class="sc-sub">Full privatization</div></div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Regulatory Complexity vs. Stakeholder Consensus · All 14 Options</div>
+    <svg id="complexity-svg" style="width:100%;height:360px"></svg>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 03 — MECHANISM DESIGN
+═══════════════════════════════════════════════ -->
+<div id="t03" class="tab-panel">
+  <div class="panel-sub">Tab 03 · Analytical Layer</div>
+  <div class="panel-title">Mechanism Design — A–D Grade Matrix</div>
+  <div class="panel-desc">Four criteria: incentive compatibility, information revelation, participation constraints, and efficiency. The central tension: FMIC grades A across all dimensions but is unimplementable at 12% coordination success. The Hybrid Utility-Competition Model grades C+ but achieves 85% implementation probability.</div>
+
+  <div class="stat-row">
+    <div class="stat-card"><div class="sc-val" style="color:var(--green)">A</div><div class="sc-label">FMIC grade</div><div class="sc-sub">12% coord. success</div></div>
+    <div class="stat-card"><div class="sc-val" style="color:var(--amber)">C+</div><div class="sc-label">Hybrid Utility grade</div><div class="sc-sub">85% coord. success</div></div>
+    <div class="stat-card"><div class="sc-val" style="color:var(--red)">D</div><div class="sc-label">Full privatization</div><div class="sc-sub">uninsured tail risk</div></div>
+  </div>
+
+  <div class="heatmap-wrap">
+    <table class="hmap" id="hmap-table"></table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 04 — PATHWAYS
+═══════════════════════════════════════════════ -->
+<div id="t04" class="tab-panel">
+  <div class="panel-sub">Tab 04 · Dynamic Model</div>
+  <div class="panel-title">Pathways — Dynamic Quality Trajectories</div>
+  <div class="panel-desc">Reform quality trajectories over a 20-year horizon using logistic growth, regulatory capture, and degradation models with three-source confidence bands (parameter, model specification, and scenario uncertainty). Filter by reform category.</div>
+
+  <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+    <button class="filter-btn active" onclick="filterPathways('all',this)">All Options</button>
+    <button class="filter-btn" onclick="filterPathways('A',this)">Administrative</button>
+    <button class="filter-btn" onclick="filterPathways('C',this)">Legislative Moderate</button>
+    <button class="filter-btn" onclick="filterPathways('D',this)">Comprehensive</button>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Reform Quality over 20-Year Horizon · Confidence Bands Shown</div>
+    <svg id="pathway-svg" style="width:100%;height:340px"></svg>
+  </div>
+
+  <div style="margin-top:.8rem;font-family:var(--mono);font-size:.62rem;color:var(--text3)">
+    Confidence bands reflect three sources of uncertainty: parameter uncertainty (±20% on growth/capture rates), model specification uncertainty (alternative functional forms), and scenario uncertainty (political shock timing). Not statistical inference — structured expert elicitation.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 05 — TRILEMMA
+═══════════════════════════════════════════════ -->
+<div id="t05" class="tab-panel">
+  <div class="panel-sub">Tab 05 · Theoretical Centerpiece</div>
+  <div class="panel-title">Trilemma — The Temporal Trap</div>
+  <div class="panel-desc">No reform can simultaneously achieve all three vertices. The temporal slider shows four-phase evolution: reform window open (2008–2013), lock-in acceleration (2014–2020), structural impossibility (2020–2025), all vertices lost (2025+). Select an option to plot its position.</div>
+
+  <div class="row" style="margin-bottom:1rem;align-items:center;gap:1.5rem">
+    <div>
+      <div style="font-family:var(--mono);font-size:.65rem;color:var(--text3);margin-bottom:.3rem">Year: <span id="tri-year-label">2025</span></div>
+      <input type="range" min="2008" max="2028" value="2025" id="tri-slider" oninput="updateTrilemma(this.value)" style="width:220px;accent-color:var(--accent)">
+    </div>
+    <div>
+      <div style="font-family:var(--mono);font-size:.65rem;color:var(--text3);margin-bottom:.3rem">Option</div>
+      <select id="tri-option" onchange="updateTrilemma(document.getElementById('tri-slider').value)" style="font-family:var(--mono);font-size:.68rem;background:var(--card);border:1px solid var(--border);color:var(--text);padding:.3rem .6rem;border-radius:3px">
+      </select>
+    </div>
+    <div>
+      <div style="font-family:var(--mono);font-size:.65rem;color:var(--text3);margin-bottom:.3rem">Compare (amber)</div>
+      <select id="tri-compare" onchange="updateTrilemma(document.getElementById('tri-slider').value)" style="font-family:var(--mono);font-size:.68rem;background:var(--card);border:1px solid var(--border);color:var(--text);padding:.3rem .6rem;border-radius:3px">
+        <option value="">— None —</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="chart-wrap" style="flex:1;min-width:280px">
+      <div class="chart-title">Trilemma Space · <span id="tri-phase-label">Phase 4: All Vertices Lost</span></div>
+      <svg id="trilemma-svg" style="width:100%;max-height:380px"></svg>
+    </div>
+    <div style="flex:0 0 220px">
+      <div class="stat-card" style="margin-bottom:.6rem">
+        <div class="sc-label">Phase</div>
+        <div style="font-family:var(--serif);font-size:.85rem;color:var(--text);margin-top:.2rem" id="tri-phase-desc">All Vertices Lost</div>
+      </div>
+      <div class="stat-card" style="margin-bottom:.6rem">
+        <div class="sc-label">Achievable zone</div>
+        <div class="sc-val" id="tri-zone-pct">~8%</div>
+        <div class="sc-sub">of triangle area</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Lock-in strength</div>
+        <div class="sc-val" id="tri-lockin">13.9</div>
+        <div class="sc-sub">year 17</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 06 — LOCK-IN CLOCK
+═══════════════════════════════════════════════ -->
+<div id="t06" class="tab-panel">
+  <div class="panel-sub">Tab 06 · Simulation 3</div>
+  <div class="panel-title">Lock-In Clock — Path Dependence Accumulation</div>
+  <div class="panel-desc">Four mechanisms accumulate lock-in strength over the conservatorship. Reform cost grows exponentially with lock-in, crossing the political feasibility limit at year 12 (~2020). Policy shock parameters are fixed to empirical calibration — three discontinuous jumps at historically documented events.</div>
+
+  <div class="stat-row">
+    <div class="stat-card"><div class="sc-val">Yr 12</div><div class="sc-label">Critical threshold</div><div class="sc-sub">~2020: reform impossible</div></div>
+    <div class="stat-card"><div class="sc-val">7.3×</div><div class="sc-label">Feasibility excess</div><div class="sc-sub">current (year 17)</div></div>
+    <div class="stat-card"><div class="sc-val">52%</div><div class="sc-label">Coordination effects</div><div class="sc-sub">of lock-in at yr 17</div></div>
+    <div class="stat-card"><div class="sc-val">13.9</div><div class="sc-label">Lock-in strength</div><div class="sc-sub">L(17), current</div></div>
+  </div>
+
+  <div class="chart-wrap" style="margin-bottom:.8rem">
+    <div class="chart-title">Panel A — Lock-In Strength Accumulation by Mechanism</div>
+    <svg id="lockin-svg" style="width:100%;height:240px"></svg>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-title">Panel B — Reform Cost vs. Political Feasibility Limit</div>
+    <svg id="cost-svg" style="width:100%;height:220px"></svg>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 07 — COORDINATION
+═══════════════════════════════════════════════ -->
+<div id="t07" class="tab-panel">
+  <div class="panel-sub">Tab 07 · Simulation 2</div>
+  <div class="panel-title">Coordination — N-Player Game</div>
+  <div class="panel-desc">Select agencies required for a reform. Nash equilibrium success probability updates in real time via P(success) ≈ p^N. Agencies marked in red have negative benefit parameters — they rationally oppose reform because they lose authority. Each additional agency reduces success by ~10 percentage points.</div>
+
+  <div class="stat-row">
+    <div class="stat-card"><div class="sc-val" id="coord-n">2</div><div class="sc-label">Agencies selected</div></div>
+    <div class="stat-card"><div class="sc-val" id="coord-prob">85%</div><div class="sc-label">Success probability</div><div class="sc-sub">Nash equilibrium</div></div>
+    <div class="stat-card"><div class="sc-val" id="coord-regime">Feasible</div><div class="sc-label">Implementation regime</div></div>
+  </div>
+
+  <div style="display:flex;gap:.5rem;margin-bottom:.8rem;flex-wrap:wrap">
+    <button onclick="setAgencyPreset('admin')" style="font-family:var(--mono);font-size:.62rem;padding:.25rem .7rem;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:2px">Administrative (N=2)</button>
+    <button onclick="setAgencyPreset('hybrid')" style="font-family:var(--mono);font-size:.62rem;padding:.25rem .7rem;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:2px">Hybrid Utility (N=3)</button>
+    <button onclick="setAgencyPreset('multi')" style="font-family:var(--mono);font-size:.62rem;padding:.25rem .7rem;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:2px">Multiple Guarantors (N=9)</button>
+    <button onclick="setAgencyPreset('fmic')" style="font-family:var(--mono);font-size:.62rem;padding:.25rem .7rem;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:2px">FMIC (N=12)</button>
+  </div>
+
+  <div class="agency-grid" id="agency-grid"></div>
+
+  <div class="row">
+    <div class="chart-wrap" style="flex:1">
+      <div class="chart-title">Success Probability vs. Agency Count</div>
+      <svg id="coord-svg" style="width:100%;height:220px"></svg>
+    </div>
+    <div style="flex:0 0 200px">
+      <div class="meter-wrap">
+        <div style="font-family:var(--mono);font-size:.65rem;color:var(--text3);margin-bottom:.4rem">Implementation probability</div>
+        <div class="sc-val" id="coord-meter-val" style="font-size:2rem">85%</div>
+        <div class="meter-bar-bg"><div class="meter-bar-fill" id="coord-bar" style="width:85%"></div></div>
+        <div class="meter-labels"><span>0%</span><span>50%</span><span>100%</span></div>
+        <div style="margin-top:.7rem;font-family:var(--mono);font-size:.6rem;color:var(--text3)">
+          Formula: P = p^N, p = 0.85<br>
+          <span id="coord-formula"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 08 — COMPLEMENTARITIES
+═══════════════════════════════════════════════ -->
+<div id="t08" class="tab-panel">
+  <div class="panel-sub">Tab 08 · Simulation 1 (Pre-Computed)</div>
+  <div class="panel-title">Complementarities — Institutional Network</div>
+  <div class="panel-desc">Pre-computed outputs from the six-institution ODE model (Hall &amp; Soskice 2001). Edge thickness proportional to complementarity strength κ_ij. Isolated GSE reform achieves only 28% of target — system fitness drops 23% before partial recovery. Complementarities strengthen 3% per year during conservatorship.</div>
+
+  <div class="stat-row">
+    <div class="stat-card"><div class="sc-val">28%</div><div class="sc-label">Isolated reform ceiling</div><div class="sc-sub">final equilibrium</div></div>
+    <div class="stat-card"><div class="sc-val">−23%</div><div class="sc-label">System fitness drop</div><div class="sc-sub">at peak disruption</div></div>
+    <div class="stat-card"><div class="sc-val">0.85</div><div class="sc-label">κ: GSE–Banking</div><div class="sc-sub">strongest link</div></div>
+    <div class="stat-card"><div class="sc-val">8%</div><div class="sc-label">Reform success yr 20</div><div class="sc-sub">time-varying κ</div></div>
+  </div>
+
+  <div class="row">
+    <div class="chart-wrap" style="flex:1;min-width:260px">
+      <div class="chart-title">Institutional Complementarity Network</div>
+      <svg id="network-svg" style="width:100%;height:300px"></svg>
+    </div>
+    <div class="chart-wrap" style="flex:1;min-width:260px">
+      <div class="chart-title">Isolated Reform Trajectory &amp; System Fitness</div>
+      <svg id="fitness-svg" style="width:100%;height:300px"></svg>
+    </div>
+  </div>
+
+  <div style="margin-top:.8rem">
+    <div class="chart-wrap">
+      <div class="chart-title">Time-Varying Reform Success Rate · Complementarities Strengthening at 3%/yr</div>
+      <svg id="timevar-svg" style="width:100%;height:180px"></svg>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 09 — SCENARIOS
+═══════════════════════════════════════════════ -->
+<div id="t09" class="tab-panel">
+  <div class="panel-sub">Tab 09 · Counterfactuals &amp; AI Analysis</div>
+  <div class="panel-title">Scenarios — Counterfactuals &amp; Proposal Analyzer</div>
+  <div class="panel-desc">Six historical counterfactuals rerun path dependence accumulation from each intervention date, showing avoided lock-in and trilemma vertex accessibility. The AI-powered Proposal Analyzer scores new reform proposals against the full JUNO rubric using the Anthropic API.</div>
+
+  <div class="scenario-grid" id="scenario-grid"></div>
+
+  <div class="chart-wrap" style="margin-bottom:1.2rem">
+    <div class="chart-title">Counterfactual Lock-In Trajectory · <span id="scenario-label">Select a scenario above</span></div>
+    <svg id="scenario-svg" style="width:100%;height:220px"></svg>
+  </div>
+
+  <div class="divider"></div>
+  <div style="font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:.6rem">AI-Powered Proposal Analyzer · Anthropic API</div>
+
+  <div class="analyzer-wrap">
+    <div style="font-family:var(--mono);font-size:.65rem;color:var(--text3);margin-bottom:.5rem">Paste text of a GSE reform proposal. JUNO will score it against the trilemma framework, estimate coordination requirements, and place it in the taxonomy.</div>
+    <textarea id="proposal-text" placeholder="Paste reform proposal text here..."></textarea>
+    <br>
+    <button class="btn-analyze" id="analyze-btn" onclick="analyzeProposal()">⟶ Analyze Proposal</button>
+    <div id="analysis-result" class="analysis-result" style="display:none"></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════
+
+const REFORMS = [
+  // Category A — Administrative
+  {id:'recap', name:'Recap & Release', cat:'A', catName:'Administrative',
+   md:2, stab:5, simp:9, complex:22, consensus:8.2,
+   scores:{prog:5, lib:8, fed:6, pol:9, hous:6},
+   mechanism:{ic:'D',ir:'D',pc:'C',eff:'D'}},
+  {id:'hybrid', name:'Hybrid Utility-Competition', cat:'A', catName:'Administrative',
+   md:5, stab:8, simp:8, complex:28, consensus:11.6,
+   scores:{prog:8, lib:6, fed:9, pol:9, hous:8},
+   mechanism:{ic:'C',ir:'C',pc:'B',eff:'C'}},
+  {id:'utility', name:'Mortgage Utility', cat:'A', catName:'Administrative',
+   md:3, stab:9, simp:8, complex:25, consensus:9.8,
+   scores:{prog:9, lib:3, fed:8, pol:8, hous:9},
+   mechanism:{ic:'D',ir:'D',pc:'B',eff:'C'}},
+  {id:'status', name:'Status Quo Perpetuation', cat:'A', catName:'Administrative',
+   md:1, stab:5, simp:10, complex:10, consensus:4.1,
+   scores:{prog:3, lib:2, fed:5, pol:7, hous:4},
+   mechanism:{ic:'D',ir:'D',pc:'D',eff:'D'}},
+  // Category B — Sector-Specific
+  {id:'multi_fam', name:'Multifamily Separation', cat:'B', catName:'Sector-Specific',
+   md:4, stab:6, simp:6, complex:42, consensus:6.9,
+   scores:{prog:6, lib:5, fed:6, pol:6, hous:7},
+   mechanism:{ic:'C',ir:'C',pc:'C',eff:'C'}},
+  {id:'millstein', name:'Millstein Restructuring', cat:'B', catName:'Sector-Specific',
+   md:5, stab:7, simp:5, complex:48, consensus:7.2,
+   scores:{prog:6, lib:6, fed:7, pol:5, hous:6},
+   mechanism:{ic:'C',ir:'B',pc:'C',eff:'C'}},
+  // Category C — Legislative Moderate
+  {id:'multi_g', name:'Multiple Private Guarantors', cat:'C', catName:'Legislative Moderate',
+   md:8, stab:8, simp:4, complex:64, consensus:8.9,
+   scores:{prog:7, lib:8, fed:8, pol:4, hous:7},
+   mechanism:{ic:'B',ir:'B',pc:'B',eff:'B'}},
+  {id:'nmrc', name:'NMRC (Zandi-Parrott)', cat:'C', catName:'Legislative Moderate',
+   md:7, stab:8, simp:3, complex:68, consensus:7.8,
+   scores:{prog:8, lib:5, fed:8, pol:3, hous:8},
+   mechanism:{ic:'B',ir:'B',pc:'B',eff:'B'}},
+  {id:'regional', name:'Regional GSE Model', cat:'C', catName:'Legislative Moderate',
+   md:5, stab:7, simp:4, complex:58, consensus:6.5,
+   scores:{prog:7, lib:4, fed:6, pol:4, hous:7},
+   mechanism:{ic:'C',ir:'C',pc:'B',eff:'C'}},
+  // Category D — Comprehensive
+  {id:'fmic', name:'FMIC (Corker-Warner)', cat:'D', catName:'Comprehensive',
+   md:10, stab:10, simp:1, complex:82, consensus:7.1,
+   scores:{prog:7, lib:7, fed:9, pol:1, hous:7},
+   mechanism:{ic:'A',ir:'A',pc:'A',eff:'A'}},
+  {id:'bloomberg', name:'Bloomberg 2020 Plan', cat:'D', catName:'Comprehensive',
+   md:9, stab:10, simp:1, complex:79, consensus:6.8,
+   scores:{prog:6, lib:7, fed:9, pol:1, hous:6},
+   mechanism:{ic:'A',ir:'A',pc:'A',eff:'A'}},
+  {id:'jcrapo', name:'Johnson-Crapo', cat:'D', catName:'Comprehensive',
+   md:9, stab:9, simp:1, complex:76, consensus:6.9,
+   scores:{prog:7, lib:7, fed:8, pol:2, hous:7},
+   mechanism:{ic:'A',ir:'A',pc:'A',eff:'B'}},
+  // Category E — Extreme
+  {id:'privatize', name:'Full Privatization', cat:'E', catName:'Extreme',
+   md:10, stab:1, simp:5, complex:55, consensus:3.8,
+   scores:{prog:2, lib:10, fed:2, pol:4, hous:2},
+   mechanism:{ic:'B',ir:'A',pc:'D',eff:'B'}},
+  {id:'nationalize', name:'Full Nationalization', cat:'E', catName:'Extreme',
+   md:1, stab:9, simp:3, complex:70, consensus:4.2,
+   scores:{prog:9, lib:1, fed:6, pol:2, hous:8},
+   mechanism:{ic:'D',ir:'D',pc:'A',eff:'C'}},
+];
+
+const AGENCIES = [
+  {id:'fhfa', name:'FHFA', benefit:+0.8, weight:0.25, neg:false},
+  {id:'treas', name:'Treasury', benefit:+0.6, weight:0.20, neg:false},
+  {id:'omb', name:'OMB', benefit:+0.4, weight:0.10, neg:false},
+  {id:'cong', name:'Congress', benefit:+0.2, weight:0.15, neg:false},
+  {id:'fed', name:'Federal Reserve', benefit:+0.3, weight:0.08, neg:false},
+  {id:'hud', name:'HUD', benefit:-0.2, weight:0.06, neg:true},
+  {id:'fdic', name:'FDIC', benefit:+0.1, weight:0.04, neg:false},
+  {id:'sec', name:'SEC', benefit:-0.1, weight:0.04, neg:true},
+  {id:'cfpb', name:'CFPB', benefit:-0.3, weight:0.03, neg:true},
+  {id:'occ', name:'OCC', benefit:0.0, weight:0.02, neg:false},
+  {id:'cftc', name:'CFTC', benefit:0.0, weight:0.02, neg:false},
+  {id:'ncua', name:'NCUA', benefit:0.0, weight:0.01, neg:false},
+];
+
+const SCENARIOS = [
+  {id:'cw', year:2014, name:'Corker-Warner Passes', brief:'Bipartisan FMIC legislation enacted. Lock-in at year 6. Window barely open.', avoided:5.1, vertices:['Stability','Discipline']},
+  {id:'jc', year:2015, name:'Johnson-Crapo Passes', brief:'Refined FMIC structure enacted. Lock-in at year 7. Window closing rapidly.', avoided:4.8, vertices:['Stability','Discipline']},
+  {id:'trump', year:2020, name:'Trump Recap & Release', brief:'Administrative exit attempt at critical threshold year 12.', avoided:0.8, vertices:['Stability']},
+  {id:'biden', year:2022, name:'Biden Acts', brief:'Legislative reform enacted year 14. Past critical threshold — limited options.', avoided:0.0, vertices:['Stability']},
+  {id:'new27', year:2027, name:'New Legislative Window (2027)', brief:'Hypothetical unified government reform attempt at year 19.', avoided:0.0, vertices:[]},
+  {id:'custom', year:2020, name:'User-Defined', brief:'Adjust the intervention year using the slider below.', avoided:null, vertices:[], custom:true},
+];
+
+// ═══════════════════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════════════════
+function toggleTheme() {
+  const d = document.documentElement;
+  const isDark = d.getAttribute('data-theme') === 'dark';
+  d.setAttribute('data-theme', isDark ? '' : 'dark');
+  // Redraw charts on theme change
+  setTimeout(() => { drawAll(); }, 50);
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tnav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  // Lazy draw charts when tab becomes visible
+  if (id === 't02') drawComplexity();
+  if (id === 't04') drawPathways('all');
+  if (id === 't05') { populateTriOptions(); updateTrilemma(document.getElementById('tri-slider').value); }
+  if (id === 't06') drawLockIn();
+  if (id === 't07') drawCoordination();
+  if (id === 't08') drawComplementarities();
+  if (id === 't09') drawScenario(null);
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB 01 — REFORM OPTIONS
+// ═══════════════════════════════════════════════════════════
+const WEIGHT_KEYS = ['prog','lib','fed','pol','hous'];
+
+function getWeights() {
+  const vals = WEIGHT_KEYS.map(k => +document.getElementById('w-'+k).value);
+  const sum = vals.reduce((a,b)=>a+b,0) || 1;
+  return vals.map(v => v/sum);
+}
+
+function updateWeights() {
+  WEIGHT_KEYS.forEach(k => {
+    document.getElementById('wv-'+k).textContent = document.getElementById('w-'+k).value;
+  });
+  renderTable();
+}
+
+function setPreset(p) {
+  const presets = {
+    equal: [20,20,20,20,20],
+    prog:  [40,5,15,20,20],
+    lib:   [5,45,15,20,15],
+    fed:   [10,10,40,25,15],
+    pol:   [15,15,10,50,10],
+  };
+  const vals = presets[p];
+  WEIGHT_KEYS.forEach((k,i) => {
+    document.getElementById('w-'+k).value = vals[i];
+    document.getElementById('wv-'+k).textContent = vals[i];
+  });
+  renderTable();
+}
+
+function computeScore(r, weights) {
+  const keys = ['prog','lib','fed','pol','hous'];
+  return keys.reduce((s,k,i) => s + r.scores[k] * weights[i], 0);
+}
+
+function renderTable() {
+  const weights = getWeights();
+  const scored = REFORMS.map(r => ({...r, wscore: computeScore(r, weights)}));
+  const catOrder = ['A','B','C','D','E'];
+  const sorted = [...scored].sort((a,b) => b.wscore - a.wscore);
+  const rankMap = {};
+  sorted.forEach((r,i) => rankMap[r.id] = i+1);
+
+  const tbody = document.getElementById('reform-tbody');
+  tbody.innerHTML = '';
+  let lastCat = null;
+
+  // Sort by category then within category by weighted score
+  const byCat = catOrder.flatMap(cat =>
+    scored.filter(r=>r.cat===cat).sort((a,b)=>b.wscore-a.wscore)
+  );
+
+  byCat.forEach(r => {
+    if (r.cat !== lastCat) {
+      const catNames = {A:'A — Administrative',B:'B — Sector-Specific',C:'C — Legislative Moderate',D:'D — Comprehensive Restructuring',E:'E — Emergency / Extreme'};
+      const hr = document.createElement('tr');
+      hr.className = 'cat-header';
+      hr.innerHTML = `<td colspan="9">${catNames[r.cat]}</td>`;
+      tbody.appendChild(hr);
+      lastCat = r.cat;
+    }
+    const rank = rankMap[r.id];
+    const tr = document.createElement('tr');
+    const scoreColor = r.wscore > 7 ? 'var(--green)' : r.wscore > 4 ? 'var(--amber)' : 'var(--red)';
+    tr.innerHTML = `
+      <td><div class="rank-badge">${rank}</div></td>
+      <td style="color:var(--text);font-weight:400">${r.name}</td>
+      <td style="color:var(--text3)">${r.cat}</td>
+      <td>${bar(r.md,10)}</td>
+      <td>${bar(r.stab,10)}</td>
+      <td>${bar(r.simp,10)}</td>
+      <td style="color:var(--text2)">${r.complex}</td>
+      <td style="color:var(--text2)">${r.consensus.toFixed(1)}</td>
+      <td style="color:${scoreColor};font-weight:500">${r.wscore.toFixed(2)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function bar(val, max) {
+  const pct = (val/max)*100;
+  const color = pct>70?'var(--green)':pct>40?'var(--amber)':'var(--red)';
+  return `<div style="display:flex;align-items:center;gap:.4rem">
+    <div style="width:50px;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+      <div style="width:${pct}%;height:100%;background:${color};border-radius:3px"></div>
+    </div>
+    <span style="color:var(--text3)">${val}</span>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB 02 — COMPLEXITY SCATTER
+// ═══════════════════════════════════════════════════════════
+function drawComplexity() {
+  const svg = d3.select('#complexity-svg');
+  svg.selectAll('*').remove();
+  const el = document.getElementById('complexity-svg');
+  const W = el.clientWidth || 600, H = +el.style.height.replace('px','') || 360;
+  const m = {top:20,right:20,bottom:45,left:50};
+  const w = W-m.left-m.right, h = H-m.top-m.bottom;
+  const g = svg.append('g').attr('transform',`translate(${m.left},${m.top})`);
+
+  const x = d3.scaleLinear().domain([0,90]).range([0,w]);
+  const y = d3.scaleLinear().domain([0,13]).range([h,0]);
+
+  // Axes
+  g.append('g').attr('transform',`translate(0,${h})`).call(d3.axisBottom(x).ticks(6))
+    .selectAll('text').style('font-family','var(--mono)').style('font-size','10px').style('fill','var(--text3)');
+  g.append('g').call(d3.axisLeft(y).ticks(5))
+    .selectAll('text').style('font-family','var(--mono)').style('font-size','10px').style('fill','var(--text3)');
+
+  // Axis labels
+  g.append('text').attr('x',w/2).attr('y',h+38).attr('text-anchor','middle')
+    .style('font-family','var(--mono)').style('font-size','10px').style('fill','var(--text3)')
+    .text('Regulatory Complexity Score →');
+  g.append('text').attr('transform','rotate(-90)').attr('x',-h/2).attr('y',-38)
+    .attr('text-anchor','middle')
+    .style('font-family','var(--mono)').style('font-size','10px').style('fill','var(--text3)')
+    .text('← Stakeholder Consensus Score');
+
+  // Trend line (approximate)
+  const tl = g.append('line')
+    .attr('x1',x(10)).attr('y1',y(11.8))
+    .attr('x2',x(85)).attr('y2',y(3.5))
+    .attr('stroke','var(--accent)').attr('stroke-width',1)
+    .attr('stroke-dasharray','4,3').attr('opacity',0.5);
+
+  // Zones
+  g.append('rect').attr('x',x(0)).attr('y',0).attr('width',x(35)-x(0)).attr('height',h)
+    .attr('fill','#22c55e').attr('opacity',0.06);
+  g.append('rect').attr('x',x(65)).attr('y',0).attr('width',w-x(65)).attr('height',h)
+    .attr('fill','#ef4444').attr('opacity',0.06);
+
+  // Dots
+  const catColors = {A:'var(--green)',B:'var(--acc2)',C:'#3b82f6',D:'var(--accent)',E:'var(--red)'};
+  g.selectAll('.dot').data(REFORMS).enter().append('circle')
+    .attr('class','dot')
+    .attr('cx',d => x(d.complex))
+    .attr('cy',d => y(d.consensus))
+    .attr('r',6)
+    .attr('fill',d => catColors[d.cat])
+    .attr('opacity',0.8)
+    .attr('stroke','var(--bg)').attr('stroke-width',1.5)
+    .append('title').text(d => `${d.name}\nComplexity: ${d.complex}\nConsensus: ${d.consensus}`);
+
+  // Labels for key options
+  const labeled = ['hybrid','fmic','status','privatize'];
+  g.selectAll('.dot-label').data(REFORMS.filter(r=>labeled.includes(r.id))).enter()
+    .append('text')
+    .attr('x',d=>x(d.complex)+9).attr('y',d=>y(d.consensus)+4)
+    .style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text2)')
+    .text(d=>d.name.length>20?d.name.slice(0,18)+'…':d.name);
+
+  // Legend
+  const cats = [{k:'A',n:'Administrative'},{k:'C',n:'Legislative'},{k:'D',n:'Comprehensive'},{k:'E',n:'Extreme'}];
+  cats.forEach((c,i) => {
+    g.append('circle').attr('cx',w-120).attr('cy',12+i*16).attr('r',5).attr('fill',catColors[c.k]).attr('opacity',0.8);
+    g.append('text').attr('x',w-112).attr('y',16+i*16)
+      .style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)')
+      .text(c.n);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB 03 — MECHANISM DESIGN HEAT MAP
+// ═══════════════════════════════════════════════════════════
+function buildHeatmap() {
+  const criteria = ['Incentive\nCompatibility','Information\nRevelation','Participation\nConstraints','Efficiency'];
+  const gradeColors = {
+    A:{bg:'#dcfce7',color:'#166534'},
+    B:{bg:'#dbeafe',color:'#1d4ed8'},
+    C:{bg:'#fef3c7',color:'#92400e'},
+    D:{bg:'#fee2e2',color:'#991b1b'}
+  };
+  const keys = ['ic','ir','pc','eff'];
+
+  const table = document.getElementById('hmap-table');
+  let html = '<tr><th style="text-align:left">Option</th>';
+  criteria.forEach(c => { html += `<th>${c.replace('\n','<br>')}</th>`; });
+  html += '<th>Overall</th></tr>';
+
+  const catOrder = ['A','B','C','D','E'];
+  const catNames = {A:'Administrative',B:'Sector-Specific',C:'Legislative Moderate',D:'Comprehensive',E:'Extreme'};
+  let lastCat = null;
+
+  catOrder.forEach(cat => {
+    REFORMS.filter(r=>r.cat===cat).forEach(r => {
+      if (r.cat !== lastCat) {
+        html += `<tr><td colspan="${criteria.length+2}" style="background:var(--bg3);color:var(--text3);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;padding:.3rem .6rem">${catNames[cat]}</td></tr>`;
+        lastCat = cat;
+      }
+      const grades = keys.map(k => r.mechanism[k]);
+      const overall = ['A','B','C','D'].indexOf(grades[0]) < 2 && grades.every(g=>g<='B') ? 'A/B' :
+                      grades.every(g=>g>='C') ? 'C/D' : 'B/C';
+      const overallGrade = r.mechanism.ic;
+      html += `<tr><td class="row-label">${r.name}</td>`;
+      keys.forEach(k => {
+        const g = r.mechanism[k];
+        const isDark = document.documentElement.getAttribute('data-theme')==='dark';
+        const bg = isDark ? (g==='A'?'#14532d':g==='B'?'#1e3a5f':g==='C'?'#451a03':'#450a0a') : gradeColors[g].bg;
+        const col = isDark ? (g==='A'?'#4ade80':g==='B'?'#93c5fd':g==='C'?'#fbbf24':'#f87171') : gradeColors[g].color;
+        html += `<td style="background:${bg};color:${col};font-weight:600">${g}</td>`;
+      });
+      html += `<td><span class="grade grade-${r.mechanism.ic}">${r.mechanism.ic}</span></td></tr>`;
+    });
+  });
+  table.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB 04 — PATHWAYS
+// ═══════════════════════════════════════════════════════════
+function logistic(t, Q0, alpha, tau, k) {
+  return Q0 + alpha * (1 / (1 + Math.exp(-k*(t-tau))));
+}
+function capture(t, tc, lam) {
+  return t > tc ? (1 - Math.exp(-lam*(t-tc))) : 0;
+}
+function reformQuality(r, t) {
+  const params = {
+    A: {Q0:0.4, alpha:0.35, tau:3, k:0.8, capRate:0.06, capStart:8, degrade:0.01},
+    B: {Q0:0.3, alpha:0.45, tau:5, k:0.6, capRate:0.05, capStart:9, degrade:0.008},
+    C: {Q0:0.2, alpha:0.55, tau:7, k:0.5, capRate:0.03, capStart:11, degrade:0.005},
+    D: {Q0:0.1, alpha:0.70, tau:9, k:0.4, capRate:0.02, capStart:12, degrade:0.003},
+    E: {Q0:0.3, alpha:0.30, tau:4, k:0.7, capRate:0.09, capStart:6, degrade:0.015},
+  };
+  const p = params[r.cat];
+  const base = logistic(t, p.Q0, p.alpha, p.tau, p.k);
+  const cap = capture(t, p.capStart, p.capRate);
+  const deg = p.degrade * Math.max(0, t - 15);
+  const feasMod = (r.simp / 10) * 0.3;
+  return Math.max(0, Math.min(1, base * (1 - cap) * (1 - deg) * (0.7 + feasMod)));
+}
+
+let pathwayFilter = 'all';
+function filterPathways(cat, btn) {
+  pathwayFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  drawPathways(cat);
+}
+
+const filterBtnStyle = `font-family:var(--mono);font-size:.62rem;padding:.25rem .7rem;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:2px;transition:all .2s`;
+document.querySelectorAll('.filter-btn').forEach(b => {
+  b.setAttribute('style', filterBtnStyle);
+});
+
+function drawPathways(catFilter) {
+  const svg = d3.select('#pathway-svg');
+  svg.selectAll('*').remove();
+  const el = document.getElementById('pathway-svg');
+  const W = el.clientWidth || 600, H = +el.style.height.replace('px','') || 340;
+  const m = {top:15,right:20,bottom:40,left:50};
+  const w = W-m.left-m.right, h = H-m.top-m.bottom;
+  const g = svg.append('g').attr('transform',`translate(${m.left},${m.top})`);
+
+  const years = d3.range(0, 21);
+  const x = d3.scaleLinear().domain([0,20]).range([0,w]);
+  const y = d3.scaleLinear().domain([0,1]).range([h,0]);
+
+  g.append('g').attr('transform',`translate(0,${h})`).call(d3.axisBottom(x).ticks(10).tickFormat(d=>`Yr ${d}`))
+    .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+  g.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('.0%')))
+    .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+
+  const catColors = {A:'var(--green)',B:'#f59e0b',C:'#3b82f6',D:'var(--accent)',E:'var(--red)'};
+  const reforms = catFilter==='all' ? REFORMS : REFORMS.filter(r=>r.cat===catFilter);
+
+  reforms.forEach(r => {
+    const vals = years.map(t => reformQuality(r, t));
+    const bandW = 0.06;
+    const upper = years.map(t => Math.min(1, reformQuality(r,t) + bandW + t*0.002));
+    const lower = years.map(t => Math.max(0, reformQuality(r,t) - bandW - t*0.001));
+
+    // Band
+    const area = d3.area().x((_,i)=>x(years[i])).y0((_,i)=>y(lower[i])).y1((_,i)=>y(upper[i]));
+    g.append('path').datum(vals).attr('d', area).attr('fill', catColors[r.cat]).attr('opacity', 0.08);
+
+    // Line
+    const line = d3.line().x((_,i)=>x(years[i])).y(d=>y(d)).curve(d3.curveCatmullRom);
+    g.append('path').datum(vals).attr('d', line).attr('fill','none')
+      .attr('stroke', catColors[r.cat]).attr('stroke-width', catFilter==='all'?1:1.5)
+      .attr('opacity', catFilter==='all'?0.6:0.9);
+  });
+
+  // Year 12 marker
+  g.append('line').attr('x1',x(12)).attr('y1',0).attr('x2',x(12)).attr('y2',h)
+    .attr('stroke','var(--accent)').attr('stroke-width',1).attr('stroke-dasharray','3,3').attr('opacity',0.6);
+  g.append('text').attr('x',x(12)+4).attr('y',14)
+    .style('font-family','var(--mono)').style('font-size','8px').style('fill','var(--accent)')
+    .text('Threshold yr 12');
+
+  g.append('text').attr('x',w/2).attr('y',h+34).attr('text-anchor','middle')
+    .style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)')
+    .text('Years from conservatorship initiation (2008 = Year 0)');
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB 05 — TRILEMMA
+// ═══════════════════════════════════════════════════════════
+function populateTriOptions() {
+  const sel = document.getElementById('tri-option');
+  const sel2 = document.getElementById('tri-compare');
+  if (sel.options.length > 0) return;
+  REFORMS.forEach(r => {
+    sel.add(new Option(r.name, r.id));
+    sel2.add(new Option(r.name, r.id));
+  });
+}
+
+function getPhase(year) {
+  const y = +year;
+  if (y <= 2013) return {n:1, label:'Phase 1–2: Reform Window Open', pct:65, desc:'Multiple pathways available'};
+  if (y <= 2020) return {n:2, label:'Phase 3: Lock-In Accelerating', pct:35, desc:'Window closing rapidly'};
+  if (y <= 2025) return {n:3, label:'Phase 4: Structural Impossibility', pct:12, desc:'Critical threshold crossed (~2020)'};
+  return {n:4, label:'Phase 5: All Vertices Lost', pct:4, desc:'Reform cost 7×+ feasibility limit'};
+}
+
+function lockInAtYear(year) {
+  const t = Math.max(0, year - 2008);
+  const learning = 1.5 * (Math.pow(1+t, 0.4) - 1);
+  const coord = 2.0 * (Math.exp(0.1*t) - 1);
+  const expect = 1.8 * (0.12*t + (t>=4?2.0:0) + (t>=11?1.5:0) + (t>=17?1.0:0));
+  const sunk = 1.2 * Math.log(1+t) * 1.5;
+  return learning + coord + expect + sunk;
+}
+
+function updateTrilemma(year) {
+  document.getElementById('tri-year-label').textContent = year;
+  const phase = getPhase(+year);
+  document.getElementById('tri-phase-label').textContent = phase.label;
+  document.getElementById('tri-phase-desc').textContent = phase.desc;
+  document.getElementById('tri-zone-pct').textContent = `~${phase.pct}%`;
+  const li = lockInAtYear(+year);
+  document.getElementById('tri-lockin').textContent = li.toFixed(1);
+  drawTrilemma(+year);
+}
+
+function drawTrilemma(year) {
+  const svg = d3.select('#trilemma-svg');
+  svg.selectAll('*').remove();
+  const el = document.getElementById('trilemma-svg');
+  const W = el.clientWidth || 460;
+  const H = Math.min(W * 0.85, 360);
+  svg.attr('viewBox', `0 0 ${W} ${H}`);
+
+  const cx = W/2, cy = H*0.5;
+  const R = Math.min(W,H)*0.38;
+
+  // Triangle vertices
+  const top  = {x:cx, y:cy-R, label:'Market Discipline'};
+  const botL = {x:cx-R*Math.sin(Math.PI/3)*1.1, y:cy+R*0.5, label:'Systemic Stability'};
+  const botR = {x:cx+R*Math.sin(Math.PI/3)*1.1, y:cy+R*0.5, label:'Implementation Simplicity'};
+
+  const phase = getPhase(year);
+
+  // Achievable zone (shrinks with phase)
+  const zoneAlpha = phase.pct / 100;
+  const zoneR = R * Math.sqrt(zoneAlpha) * 0.55;
+
+  // Draw zone
+  svg.append('circle').attr('cx',cx).attr('cy',cy+R*0.05).attr('r',zoneR)
+    .attr('fill','var(--accent)').attr('opacity',0.12);
+
+  // Triangle
+  svg.append('polygon')
+    .attr('points',`${top.x},${top.y} ${botL.x},${botL.y} ${botR.x},${botR.y}`)
+    .attr('fill','none').attr('stroke','var(--border)').attr('stroke-width',1.5);
+
+  // Vertex labels
+  [[top,'Market\nDiscipline',-5],[botL,'Systemic\nStability',10],[botR,'Implementation\nSimplicity',10]].forEach(([v,lbl,dy]) => {
+    const lines = lbl.split('\n');
+    const anchor = v.x < cx-10 ? 'end' : v.x > cx+10 ? 'start' : 'middle';
+    const dx = v.x < cx-10 ? -12 : v.x > cx+10 ? 12 : 0;
+    lines.forEach((l,i) => {
+      svg.append('text').attr('x',v.x+dx).attr('y',v.y+dy+i*13)
+        .attr('text-anchor',anchor)
+        .style('font-family','var(--mono)').style('font-size','10px').style('fill','var(--text2)')
+        .text(l);
+    });
+    svg.append('circle').attr('cx',v.x).attr('cy',v.y).attr('r',4).attr('fill','var(--accent)');
+  });
+
+  // Plot selected option
+  const selId = document.getElementById('tri-option').value;
+  const r = REFORMS.find(rf=>rf.id===selId);
+  if (r) {
+    // Barycentric-ish position
+    const md = r.md/10, stab = r.stab/10, simp = r.simp/10;
+    const sum = md+stab+simp||1;
+    const px = (md/sum)*top.x + (stab/sum)*botL.x + (simp/sum)*botR.x;
+    const py = (md/sum)*top.y + (stab/sum)*botL.y + (simp/sum)*botR.y;
+    svg.append('circle').attr('cx',px).attr('cy',py).attr('r',7)
+      .attr('fill','var(--accent)').attr('opacity',0.9);
+    svg.append('text').attr('x',px+10).attr('y',py+4)
+      .style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text)')
+      .text(r.name.length>22?r.name.slice(0,20)+'…':r.name);
+  }
+
+  // Compare option (amber)
+  const cmpId = document.getElementById('tri-compare').value;
+  const r2 = cmpId ? REFORMS.find(rf=>rf.id===cmpId) : null;
+  if (r2) {
+    const md = r2.md/10, stab = r2.stab/10, simp = r2.simp/10;
+    const sum = md+stab+simp||1;
+    const px = (md/sum)*top.x + (stab/sum)*botL.x + (simp/sum)*botR.x;
+    const py = (md/sum)*top.y + (stab/sum)*botL.y + (simp/sum)*botR.y;
+    svg.append('circle').attr('cx',px).attr('cy',py).attr('r',7)
+      .attr('fill','#d97706').attr('opacity',0.85);
+    svg.append('text').attr('x',px+10).attr('y',py-6)
+      .style('font-family','var(--mono)').style('font-size','9px').style('fill','#d97706')
+      .text(r2.name.length>22?r2.name.slice(0,20)+'…':r2.name);
+  }
+
+  // Phase annotation
+  svg.append('text').attr('x',cx).attr('y',H-8).attr('text-anchor','middle')
+    .style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)')
+    .text(`${year} · Achievable zone: ~${phase.pct}% of triangle`);
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB 06 — LOCK-IN CLOCK
+// ═══════════════════════════════════════════════════════════
+function getLockInComponents(t) {
+  const learning = Math.pow(1+t, 0.4) - 1;
+  const coord    = Math.exp(0.1*t) - 1;
+  const expect   = 0.12*t + (t>=4?2.0:0) + (t>=11?1.5:0) + (t>=17?1.0:0);
+  const sunk     = Math.log(1+t) * 1.5;
+  return {
+    learning: 1.5*learning,
+    coord:    2.0*coord,
+    expect:   1.8*expect,
+    sunk:     1.2*sunk,
+    total:    1.5*learning + 2.0*coord + 1.8*expect + 1.2*sunk
+  };
+}
+
+function drawLockIn() {
+  // Panel A — stacked area
+  {
+    const svg = d3.select('#lockin-svg');
+    svg.selectAll('*').remove();
+    const el = document.getElementById('lockin-svg');
+    const W = el.clientWidth||600, H = 240;
+    const m = {top:15,right:15,bottom:35,left:50};
+    const w = W-m.left-m.right, h = H-m.top-m.bottom;
+    const g = svg.append('g').attr('transform',`translate(${m.left},${m.top})`);
+
+    const years = d3.range(0,21);
+    const x = d3.scaleLinear().domain([0,20]).range([0,w]);
+    const y = d3.scaleLinear().domain([0,16]).range([h,0]);
+
+    g.append('g').attr('transform',`translate(0,${h})`).call(d3.axisBottom(x).ticks(10).tickFormat(d=>`Yr ${d}`))
+      .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+    g.append('g').call(d3.axisLeft(y).ticks(5))
+      .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+
+    const mechs = ['sunk','expect','learning','coord'];
+    const mColors = {sunk:'#7c3aed',expect:'#d97706',learning:'#92400e',coord:'#166534'};
+    const mNames  = {sunk:'Sunk Costs',expect:'Adapt. Expectations',learning:'Learning Effects',coord:'Coordination (Network)'};
+
+    const stacked = years.map(t => {
+      const c = getLockInComponents(t);
+      return {t, ...c};
+    });
+
+    let base = years.map(()=>0);
+    mechs.forEach(m => {
+      const area = d3.area()
+        .x((_,i)=>x(years[i]))
+        .y0((_,i)=>y(base[i]))
+        .y1((_,i)=>y(base[i]+stacked[i][m]));
+      g.append('path').datum(stacked).attr('d',area).attr('fill',mColors[m]).attr('opacity',0.7);
+      base = years.map((t,i)=>base[i]+stacked[i][m]);
+    });
+
+    // Year 12 line
+    g.append('line').attr('x1',x(12)).attr('y1',0).attr('x2',x(12)).attr('y2',h)
+      .attr('stroke','var(--accent)').attr('stroke-width',1.5).attr('stroke-dasharray','4,3');
+    g.append('text').attr('x',x(12)+3).attr('y',12)
+      .style('font-family','var(--mono)').style('font-size','8px').style('fill','var(--accent)')
+      .text('Threshold yr 12');
+
+    // Year 17 marker
+    g.append('line').attr('x1',x(17)).attr('y1',0).attr('x2',x(17)).attr('y2',h)
+      .attr('stroke','var(--acc2)').attr('stroke-width',1).attr('stroke-dasharray','2,2').attr('opacity',0.7);
+
+    // Shock annotations
+    [{t:4,label:'2012\nNet Worth\nSweep'},{t:11,label:'2019\nTreasury\nPlan'},{t:17,label:'2025\nPSPA'}].forEach(({t:yr,label}) => {
+      const lines = label.split('\n');
+      lines.forEach((l,i)=>{
+        g.append('text').attr('x',x(yr)+3).attr('y',h*0.3+i*10)
+          .style('font-family','var(--mono)').style('font-size','7px').style('fill','var(--text3)')
+          .text(l);
+      });
+      g.append('line').attr('x1',x(yr)).attr('y1',h*0.25).attr('x2',x(yr)).attr('y2',y(stacked[yr].total))
+        .attr('stroke','var(--text3)').attr('stroke-width',0.5).attr('marker-end','url(#arr)');
+    });
+
+    // Legend
+    Object.entries(mNames).reverse().forEach(([k,n],i) => {
+      g.append('rect').attr('x',w-130).attr('y',8+i*14).attr('width',10).attr('height',10).attr('fill',mColors[k]).attr('opacity',0.75);
+      g.append('text').attr('x',w-117).attr('y',17+i*14)
+        .style('font-family','var(--mono)').style('font-size','8px').style('fill','var(--text3)').text(n);
+    });
+  }
+
+  // Panel B — reform cost vs feasibility
+  {
+    const svg = d3.select('#cost-svg');
+    svg.selectAll('*').remove();
+    const el = document.getElementById('cost-svg');
+    const W = el.clientWidth||600, H = 220;
+    const m = {top:15,right:15,bottom:35,left:55};
+    const w = W-m.left-m.right, h = H-m.top-m.bottom;
+    const g = svg.append('g').attr('transform',`translate(${m.left},${m.top})`);
+
+    const years = d3.range(0,21);
+    const x = d3.scaleLinear().domain([0,20]).range([0,w]);
+    const maxCost = 1200;
+    const y = d3.scaleLinear().domain([0,maxCost]).range([h,0]);
+
+    const costs = years.map(t => ({ t, cost: 50*(1+1.5*getLockInComponents(t).total) }));
+    const limit = 150;
+
+    // Feasible zone
+    g.append('rect').attr('x',0).attr('y',y(limit)).attr('width',w).attr('height',h-y(limit))
+      .attr('fill','#22c55e').attr('opacity',0.07);
+    g.append('rect').attr('x',0).attr('y',0).attr('width',w).attr('height',y(limit))
+      .attr('fill','#ef4444').attr('opacity',0.05);
+
+    g.append('g').attr('transform',`translate(0,${h})`).call(d3.axisBottom(x).ticks(10).tickFormat(d=>`Yr ${d}`))
+      .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+    g.append('g').call(d3.axisLeft(y).ticks(5))
+      .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+
+    // Feasibility limit line
+    g.append('line').attr('x1',0).attr('y1',y(limit)).attr('x2',w).attr('y2',y(limit))
+      .attr('stroke','#6b7280').attr('stroke-width',1.5).attr('stroke-dasharray','5,3');
+    g.append('text').attr('x',5).attr('y',y(limit)-5)
+      .style('font-family','var(--mono)').style('font-size','8px').style('fill','var(--text3)')
+      .text('Political feasibility limit = 150');
+
+    // Cost curve
+    const line = d3.line().x(d=>x(d.t)).y(d=>y(Math.min(d.cost,maxCost))).curve(d3.curveCatmullRom);
+    g.append('path').datum(costs).attr('d',line).attr('fill','none')
+      .attr('stroke','var(--accent)').attr('stroke-width',2);
+
+    // Year 12 threshold
+    g.append('line').attr('x1',x(12)).attr('y1',0).attr('x2',x(12)).attr('y2',h)
+      .attr('stroke','var(--accent)').attr('stroke-width',1.5).attr('stroke-dasharray','4,3');
+
+    // Historical points
+    [{yr:6,label:'Corker-Warner\n2014',color:'#22c55e'},{yr:12,label:'Trump 2020',color:'#f59e0b'},{yr:17,label:'Current\n2025',color:'#ef4444'}].forEach(({yr,label,color}) => {
+      const c = costs[yr].cost;
+      g.append('circle').attr('cx',x(yr)).attr('cy',y(Math.min(c,maxCost))).attr('r',5).attr('fill',color);
+      label.split('\n').forEach((l,i)=>{
+        g.append('text').attr('x',x(yr)+7).attr('y',y(Math.min(c,maxCost))-4+i*10)
+          .style('font-family','var(--mono)').style('font-size','8px').style('fill',color).text(l);
+      });
+    });
+
+    // 7.3x annotation
+    g.append('text').attr('x',x(17)+7).attr('y',y(limit)-8)
+      .style('font-family','var(--mono)').style('font-size','8px').style('fill','var(--red)')
+      .text('7.3× limit');
+
+    g.append('text').attr('x',w/2).attr('y',h+30).attr('text-anchor','middle')
+      .style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)')
+      .text('Years in conservatorship (2008 = Year 0)');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB 07 — COORDINATION
+// ═══════════════════════════════════════════════════════════
+function buildAgencyGrid() {
+  const grid = document.getElementById('agency-grid');
+  grid.innerHTML = '';
+  const defaults = ['fhfa','treas'];
+  AGENCIES.forEach(a => {
+    const div = document.createElement('div');
+    div.className = 'agency-item' + (a.neg?' negative':'') + (defaults.includes(a.id)?' selected':'');
+    div.id = 'ag-'+a.id;
+    div.onclick = () => toggleAgency(a.id, div);
+    div.innerHTML = `
+      <input type="checkbox" class="agency-cb" ${defaults.includes(a.id)?'checked':''} readonly>
+      <div>
+        <div class="agency-name">${a.name}</div>
+        ${a.neg?`<div class="agency-neg-tag">⚠ Negative benefit (B=${a.benefit})</div>`:''}
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+  updateCoordination();
+}
+
+function toggleAgency(id, div) {
+  div.classList.toggle('selected');
+  div.querySelector('input').checked = div.classList.contains('selected');
+  updateCoordination();
+}
+
+function getSelectedAgencies() {
+  return AGENCIES.filter(a => document.getElementById('ag-'+a.id)?.classList.contains('selected'));
+}
+
+function setAgencyPreset(preset) {
+  const presets = {
+    admin:  ['fhfa','treas'],
+    hybrid: ['fhfa','treas','cong'],
+    multi:  ['fhfa','treas','omb','cong','fed','hud','fdic','sec','cfpb'],
+    fmic:   ['fhfa','treas','omb','cong','fed','hud','fdic','sec','cfpb','occ','cftc','ncua'],
+  };
+  AGENCIES.forEach(a => {
+    const el = document.getElementById('ag-'+a.id);
+    const sel = presets[preset].includes(a.id);
+    el.classList.toggle('selected', sel);
+    el.querySelector('input').checked = sel;
+  });
+  updateCoordination();
+}
+
+function updateCoordination() {
+  const selected = getSelectedAgencies();
+  const N = selected.length;
+  const p = 0.85;
+  const prob = Math.round(Math.pow(p, N)*100);
+  const regime = prob >= 70 ? 'Feasible' : prob >= 30 ? 'Marginal' : 'Infeasible';
+  document.getElementById('coord-n').textContent = N;
+  document.getElementById('coord-prob').textContent = prob+'%';
+  document.getElementById('coord-meter-val').textContent = prob+'%';
+  document.getElementById('coord-regime').textContent = regime;
+  document.getElementById('coord-bar').style.width = prob+'%';
+  document.getElementById('coord-formula').textContent = `0.85^${N} = ${prob}%`;
+  drawCoordCurve(N, prob);
+}
+
+function drawCoordination() {
+  buildAgencyGrid();
+}
+
+function drawCoordCurve(selN, selProb) {
+  const svg = d3.select('#coord-svg');
+  svg.selectAll('*').remove();
+  const el = document.getElementById('coord-svg');
+  const W = el.clientWidth||400, H = 220;
+  const m = {top:15,right:15,bottom:35,left:50};
+  const w = W-m.left-m.right, h = H-m.top-m.bottom;
+  const g = svg.append('g').attr('transform',`translate(${m.left},${m.top})`);
+
+  const ns = d3.range(1,13);
+  const x = d3.scaleLinear().domain([1,12]).range([0,w]);
+  const y = d3.scaleLinear().domain([0,100]).range([h,0]);
+
+  g.append('g').attr('transform',`translate(0,${h})`).call(d3.axisBottom(x).ticks(11).tickFormat(d=>d))
+    .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+  g.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(d=>d+'%'))
+    .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+
+  // Zones
+  g.append('rect').attr('x',0).attr('y',y(100)).attr('width',x(3.5)).attr('height',y(50)-y(100))
+    .attr('fill','#22c55e').attr('opacity',0.1);
+  g.append('rect').attr('x',x(9.5)).attr('y',y(100)).attr('width',w-x(9.5)).attr('height',h)
+    .attr('fill','#ef4444').attr('opacity',0.08);
+
+  // 50% line
+  g.append('line').attr('x1',0).attr('y1',y(50)).attr('x2',w).attr('y2',y(50))
+    .attr('stroke','#6b7280').attr('stroke-width',1).attr('stroke-dasharray','3,3');
+
+  const probs = ns.map(n => ({n, prob: Math.pow(0.85,n)*100}));
+  const line = d3.line().x(d=>x(d.n)).y(d=>y(d.prob)).curve(d3.curveCatmullRom);
+  g.append('path').datum(probs).attr('d',line).attr('fill','none')
+    .attr('stroke','var(--accent)').attr('stroke-width',2);
+
+  // Points
+  probs.forEach(({n,prob}) => {
+    g.append('circle').attr('cx',x(n)).attr('cy',y(prob)).attr('r',n===selN?6:3.5)
+      .attr('fill',n===selN?'var(--accent)':'var(--brd2)').attr('stroke','var(--accent)').attr('stroke-width',n===selN?0:1);
+  });
+
+  g.append('text').attr('x',w/2).attr('y',h+28).attr('text-anchor','middle')
+    .style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)')
+    .text('Number of agencies required (N)');
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB 08 — COMPLEMENTARITIES
+// ═══════════════════════════════════════════════════════════
+function drawComplementarities() {
+  drawNetwork();
+  drawFitness();
+  drawTimeVar();
+}
+
+const INSTITUTIONS = [
+  {id:'gse', name:'GSE', x:0, y:0},
+  {id:'bank', name:'Banking', x:1, y:0.5},
+  {id:'sec', name:'Securities\nReg.', x:0.7, y:-0.8},
+  {id:'hous', name:'Housing\nPolicy', x:-0.7, y:-0.8},
+  {id:'mon', name:'Monetary\nPolicy', x:-1, y:0.5},
+  {id:'state', name:'State\nReg.', x:0, y:1.1},
+];
+const LINKS = [
+  {a:'gse',b:'bank',k:0.85},{a:'gse',b:'sec',k:0.75},{a:'gse',b:'hous',k:0.70},
+  {a:'gse',b:'mon',k:0.65},{a:'gse',b:'state',k:0.60},
+  {a:'bank',b:'sec',k:0.40},{a:'bank',b:'mon',k:0.35},{a:'hous',b:'mon',k:0.30},
+];
+
+function drawNetwork() {
+  const svg = d3.select('#network-svg');
+  svg.selectAll('*').remove();
+  const el = document.getElementById('network-svg');
+  const W = el.clientWidth||300, H = 300;
+  const cx = W/2, cy = H/2, scale = Math.min(W,H)*0.35;
+  svg.attr('viewBox',`0 0 ${W} ${H}`);
+
+  const pos = {};
+  INSTITUTIONS.forEach(n => { pos[n.id] = {x: cx+n.x*scale, y: cy+n.y*scale}; });
+
+  LINKS.forEach(l => {
+    const a = pos[l.a], b = pos[l.b];
+    svg.append('line').attr('x1',a.x).attr('y1',a.y).attr('x2',b.x).attr('y2',b.y)
+      .attr('stroke','var(--accent)').attr('stroke-width',l.k*5).attr('opacity',0.4+l.k*0.4);
+    // κ label
+    const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+    if (l.a==='gse') {
+      svg.append('text').attr('x',mx).attr('y',my)
+        .attr('text-anchor','middle')
+        .style('font-family','var(--mono)').style('font-size','8px').style('fill','var(--text3)')
+        .text(`κ=${l.k}`);
+    }
+  });
+
+  INSTITUTIONS.forEach(n => {
+    const p = pos[n.id];
+    const r = n.id==='gse' ? 20 : 14;
+    svg.append('circle').attr('cx',p.x).attr('cy',p.y).attr('r',r)
+      .attr('fill',n.id==='gse'?'var(--accent)':'var(--bg3)')
+      .attr('stroke',n.id==='gse'?'var(--accent)':'var(--border)').attr('stroke-width',1.5);
+    n.name.split('\n').forEach((l,i) => {
+      svg.append('text').attr('x',p.x).attr('y',p.y+3+(i-0.5*(n.name.split('\n').length-1))*11)
+        .attr('text-anchor','middle')
+        .style('font-family','var(--mono)').style('font-size',n.id==='gse'?'9px':'8px')
+        .style('fill',n.id==='gse'?'#fff':'var(--text2)').style('font-weight',n.id==='gse'?'500':'400')
+        .text(l);
+    });
+  });
+}
+
+function drawFitness() {
+  const svg = d3.select('#fitness-svg');
+  svg.selectAll('*').remove();
+  const el = document.getElementById('fitness-svg');
+  const W = el.clientWidth||300, H = 300;
+  const m = {top:15,right:15,bottom:35,left:45};
+  const w = W-m.left-m.right, h = H-m.top-m.bottom;
+  const g = svg.append('g').attr('transform',`translate(${m.left},${m.top})`);
+
+  const ts = d3.range(0,51);
+  const x = d3.scaleLinear().domain([0,50]).range([0,w]);
+  const y = d3.scaleLinear().domain([0,1.1]).range([h,0]);
+
+  g.append('g').attr('transform',`translate(0,${h})`).call(d3.axisBottom(x).ticks(5))
+    .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+  g.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(d3.format('.0%')))
+    .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+
+  // GSE reform trajectory (attempts 1, reverts to 0.28)
+  const gseTrajectory = ts.map(t => {
+    if (t < 5) return t/5;
+    if (t < 20) return 1 - (1-0.28)*(1-Math.exp(-0.15*(t-5)));
+    return 0.28;
+  });
+  // System fitness (drops then partial recovery)
+  const fitness = ts.map(t => {
+    const s = gseTrajectory[t];
+    const misalign = s * (1-s) * 2;
+    return Math.max(0, 1 - misalign*0.35);
+  });
+
+  // Reference line at 0.28
+  g.append('line').attr('x1',0).attr('y1',y(0.28)).attr('x2',w).attr('y2',y(0.28))
+    .attr('stroke','var(--border)').attr('stroke-width',1).attr('stroke-dasharray','3,3');
+  g.append('text').attr('x',w).attr('y',y(0.28)-4).attr('text-anchor','end')
+    .style('font-family','var(--mono)').style('font-size','8px').style('fill','var(--text3)').text('28% equilibrium');
+
+  // Target line at 1.0
+  g.append('line').attr('x1',0).attr('y1',y(1)).attr('x2',w).attr('y2',y(1))
+    .attr('stroke','var(--border)').attr('stroke-width',1).attr('stroke-dasharray','2,4').attr('opacity',0.5);
+
+  const line = d3.line().x((_,i)=>x(ts[i])).y(d=>y(d)).curve(d3.curveCatmullRom);
+
+  // Fitness
+  g.append('path').datum(fitness).attr('d',line).attr('fill','none')
+    .attr('stroke','var(--red)').attr('stroke-width',1.5).attr('stroke-dasharray','5,3');
+
+  // GSE trajectory
+  g.append('path').datum(gseTrajectory).attr('d',line).attr('fill','none')
+    .attr('stroke','#3b82f6').attr('stroke-width',2);
+
+  // Legend
+  [{color:'#3b82f6',label:'GSE state (reform attempt)'},{color:'var(--red)',label:'System fitness'}].forEach(({color,label},i)=>{
+    g.append('line').attr('x1',w-130).attr('y1',10+i*14).attr('x2',w-118).attr('y2',10+i*14)
+      .attr('stroke',color).attr('stroke-width',2).attr('stroke-dasharray',i===1?'4,2':'none');
+    g.append('text').attr('x',w-114).attr('y',14+i*14)
+      .style('font-family','var(--mono)').style('font-size','8px').style('fill','var(--text3)').text(label);
+  });
+}
+
+function drawTimeVar() {
+  const svg = d3.select('#timevar-svg');
+  svg.selectAll('*').remove();
+  const el = document.getElementById('timevar-svg');
+  const W = el.clientWidth||580, H = 180;
+  const m = {top:12,right:15,bottom:32,left:45};
+  const w = W-m.left-m.right, h = H-m.top-m.bottom;
+  const g = svg.append('g').attr('transform',`translate(${m.left},${m.top})`);
+
+  const years = [0,5,10,15,20];
+  const success = [100,68,42,19,8];
+  const x = d3.scaleBand().domain(years).range([0,w]).padding(0.35);
+  const y = d3.scaleLinear().domain([0,100]).range([h,0]);
+
+  g.append('g').attr('transform',`translate(0,${h})`).call(d3.axisBottom(x).tickFormat(d=>`Yr ${d}`))
+    .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+  g.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(d=>d+'%'))
+    .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+
+  // 50% line
+  g.append('line').attr('x1',0).attr('y1',y(50)).attr('x2',w).attr('y2',y(50))
+    .attr('stroke','#6b7280').attr('stroke-width',1).attr('stroke-dasharray','3,3');
+
+  years.forEach((yr,i) => {
+    const s = success[i];
+    const color = s>60?'#22c55e':s>30?'#f59e0b':'#ef4444';
+    g.append('rect').attr('x',x(yr)).attr('y',y(s)).attr('width',x.bandwidth()).attr('height',h-y(s))
+      .attr('fill',color).attr('opacity',0.75).attr('rx',2);
+    g.append('text').attr('x',x(yr)+x.bandwidth()/2).attr('y',y(s)-5).attr('text-anchor','middle')
+      .style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text2)').text(s+'%');
+  });
+
+  g.append('text').attr('x',w/2).attr('y',h+26).attr('text-anchor','middle')
+    .style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)')
+    .text('Comprehensive reform success rate · κᵢⱼ(t) strengthening 3%/yr');
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB 09 — SCENARIOS
+// ═══════════════════════════════════════════════════════════
+let activeScenario = null;
+function buildScenarioGrid() {
+  const grid = document.getElementById('scenario-grid');
+  grid.innerHTML = '';
+  SCENARIOS.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'scenario-card';
+    div.id = 'sc-'+s.id;
+    div.onclick = () => selectScenario(s.id);
+    div.innerHTML = `
+      <div class="sc-year">${s.year}</div>
+      <div class="sc-name">${s.name}</div>
+      <div class="sc-brief">${s.brief}</div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function selectScenario(id) {
+  document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('sc-'+id).classList.add('active');
+  activeScenario = SCENARIOS.find(s=>s.id===id);
+  document.getElementById('scenario-label').textContent = activeScenario.name;
+  drawScenario(activeScenario);
+}
+
+function drawScenario(scenario) {
+  const svg = d3.select('#scenario-svg');
+  svg.selectAll('*').remove();
+  const el = document.getElementById('scenario-svg');
+  const W = el.clientWidth||600, H = 220;
+  const m = {top:15,right:15,bottom:35,left:55};
+  const w = W-m.left-m.right, h = H-m.top-m.bottom;
+  const g = svg.append('g').attr('transform',`translate(${m.left},${m.top})`);
+
+  const x = d3.scaleLinear().domain([0,20]).range([0,w]);
+  const y = d3.scaleLinear().domain([0,16]).range([h,0]);
+
+  g.append('g').attr('transform',`translate(0,${h})`).call(d3.axisBottom(x).ticks(10).tickFormat(d=>`Yr ${d}`))
+    .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+  g.append('g').call(d3.axisLeft(y).ticks(5))
+    .selectAll('text').style('font-family','var(--mono)').style('font-size','9px').style('fill','var(--text3)');
+
+  // Baseline (actual) trajectory
+  const years = d3.range(0,21);
+  const baseLine = d3.line().x((_,i)=>x(years[i])).y(t=>y(getLockInComponents(t).total)).curve(d3.curveCatmullRom);
+  g.append('path').datum(years).attr('d',baseLine).attr('fill','none')
+    .attr('stroke','var(--border)').attr('stroke-width',1.5).attr('stroke-dasharray','4,3')
+    .attr('opacity',0.8);
+
+  // Counterfactual (if scenario provided)
+  if (scenario) {
+    const intYear = scenario.year - 2008;
+    const cfLine = d3.line()
+      .x((_,i)=>x(years[i]))
+      .y((t) => {
+        const base = getLockInComponents(t).total;
+        if (t < intYear) return y(base);
+        // Intervention reduces accumulation rate by 30%
+        const reduced = getLockInComponents(intYear).total + (base - getLockInComponents(intYear).total)*0.55;
+        return y(Math.max(0, reduced));
+      }).curve(d3.curveCatmullRom);
+
+    g.append('path').datum(years).attr('d',cfLine).attr('fill','none')
+      .attr('stroke','var(--accent)').attr('stroke-width',2);
+
+    // Intervention marker
+    g.append('line').attr('x1',x(intYear)).attr('y1',0).attr('x2',x(intYear)).attr('y2',h)
+      .attr('stroke','var(--accent)').attr('stroke-width',1.5).attr('stroke-dasharray','3,3');
+    g.append('text').attr('x',x(intYear)+4).attr('y',20)
+      .style('font-family','var(--mono)').style('font-size','8px').style('fill','var(--accent)')
+      .text(`Intervention ${scenario.year}`);
+  }
+
+  // Threshold
+  g.append('line').attr('x1',x(12)).attr('y1',0).attr('x2',x(12)).attr('y2',h)
+    .attr('stroke','var(--red)').attr('stroke-width',1).attr('stroke-dasharray','2,3').attr('opacity',0.6);
+
+  // Legend
+  [{color:'var(--border)',dash:'4,3',label:'Actual trajectory'},{color:'var(--accent)',dash:'',label:'Counterfactual'}].forEach(({color,dash,label},i)=>{
+    g.append('line').attr('x1',w-120).attr('y1',10+i*14).attr('x2',w-105).attr('y2',10+i*14)
+      .attr('stroke',color).attr('stroke-width',1.5).attr('stroke-dasharray',dash);
+    g.append('text').attr('x',w-100).attr('y',14+i*14)
+      .style('font-family','var(--mono)').style('font-size','8px').style('fill','var(--text3)').text(label);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROPOSAL ANALYZER (Anthropic API)
+// ═══════════════════════════════════════════════════════════
+async function analyzeProposal() {
+  const text = document.getElementById('proposal-text').value.trim();
+  if (!text || text.length < 30) return;
+  const btn = document.getElementById('analyze-btn');
+  const resultDiv = document.getElementById('analysis-result');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing…';
+  resultDiv.style.display = 'none';
+
+  const systemPrompt = `You are JUNO, an expert GSE reform analytics tool built on the trilemma framework from Bieri (2026). Evaluate the provided GSE reform proposal against three criteria:
+1. TRILEMMA POSITION: Rate it on Market Discipline (1-10), Systemic Stability (1-10), and Implementation Simplicity (1-10). Identify which vertex it primarily targets and which it sacrifices.
+2. COORDINATION REQUIREMENTS: Estimate how many of the 12 regulatory agencies (FHFA, Treasury, OMB, Congress, Fed, HUD, FDIC, SEC, CFPB, OCC, CFTC, NCUA) are required. State the Nash equilibrium success probability (P ≈ 0.85^N).
+3. TEMPORAL FEASIBILITY: Given that reform costs are currently 7.3× the political feasibility limit (year 17, 2025), assess whether this proposal faces structural impossibility.
+4. TAXONOMY: Which of the 14 JUNO categories does this proposal most closely resemble?
+Be concise (200 words max). Use JUNO scoring conventions.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system: systemPrompt,
+        messages:[{role:'user', content:`Analyze this GSE reform proposal:\n\n${text}`}]
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.find(b=>b.type==='text')?.text || 'No response received.';
+    resultDiv.textContent = reply;
+    resultDiv.style.display = 'block';
+  } catch(e) {
+    resultDiv.textContent = 'API error. Ensure you are running JUNO within claude.ai or provide an API key.';
+    resultDiv.style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.textContent = '⟶ Analyze Proposal';
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+function drawAll() {
+  renderTable();
+  buildHeatmap();
+}
+
+// Filter btn styling
+document.querySelectorAll('.filter-btn').forEach(b => {
+  b.style.cssText = `font-family:var(--mono);font-size:.62rem;padding:.25rem .7rem;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:2px;transition:all .2s`;
+  b.addEventListener('mouseover',()=>{ if(!b.classList.contains('active')) b.style.borderColor='var(--accent)'; });
+  b.addEventListener('mouseout',()=>{ if(!b.classList.contains('active')) b.style.borderColor='var(--border)'; });
+});
+document.querySelector('.filter-btn').style.borderColor = 'var(--accent)';
+document.querySelector('.filter-btn').style.color = 'var(--accent)';
+
+// Observe active filter btn
+function markFilter(btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.style.borderColor='var(--border)'; b.style.color='var(--text2)';
+  });
+  btn.style.borderColor='var(--accent)'; btn.style.color='var(--accent)';
+}
+document.querySelectorAll('.filter-btn').forEach(b=>b.addEventListener('click',()=>markFilter(b)));
+
+// populate tri-option selects on load
+populateTriOptions();
+buildAgencyGrid();
+buildScenarioGrid();
+drawAll();
+drawComplexity();
+</script>
+</body>
+</html>
