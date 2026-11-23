@@ -641,6 +641,11 @@ table.hmap{border-collapse:collapse;font-family:var(--mono);font-size:.65rem}
     <div style="font-family:var(--mono);font-size:.65rem;color:var(--text3);margin-bottom:.5rem">Paste text of a GSE reform proposal. JUNO will score it against the trilemma framework, estimate coordination requirements, and place it in the taxonomy.</div>
     <textarea id="proposal-text" placeholder="Paste reform proposal text here..."></textarea>
     <br>
+    <div class="api-key-row" style="display:flex;gap:.5rem;align-items:center;margin:.4rem 0;font-family:var(--mono);font-size:.62rem;color:var(--text2)">
+      <label for="api-key-input">Anthropic API key</label>
+      <input id="api-key-input" type="password" autocomplete="off" placeholder="sk-ant-… (not needed inside claude.ai)" style="flex:1;min-width:12rem;font:inherit;padding:.25rem .4rem;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:2px">
+      <button type="button" onclick="forgetApiKey()" style="font:inherit;padding:.25rem .6rem;background:var(--bg3);border:1px solid var(--border);color:var(--text2);cursor:pointer;border-radius:2px">Forget</button>
+    </div>
     <button class="btn-analyze" id="analyze-btn" onclick="analyzeProposal()">⟶ Analyze Proposal</button>
     <div id="analysis-result" class="analysis-result" style="display:none"></div>
   </div>
@@ -1714,6 +1719,33 @@ function drawScenario(scenario) {
 // ═══════════════════════════════════════════════════════════
 // PROPOSAL ANALYZER (Anthropic API)
 // ═══════════════════════════════════════════════════════════
+// Claude API: model and headers in one place (bieri-ai webdev:claude-api-client).
+// To change the model, edit CLAUDE_API.model only; the README names the same ID.
+const CLAUDE_API = { model: 'claude-sonnet-5-5', version: '2023-06-01', keyStore: 'juno-api-key' };
+function claudeHeaders(key) {
+  const h = { 'Content-Type': 'application/json', 'anthropic-version': CLAUDE_API.version };
+  if (key) { h['x-api-key'] = key; h['anthropic-dangerous-direct-browser-access'] = 'true'; }
+  return h;
+}
+function getApiKey() {
+  const el = document.getElementById('api-key-input');
+  const typed = el ? el.value.trim() : '';
+  try {
+    if (typed) sessionStorage.setItem(CLAUDE_API.keyStore, typed);
+    return typed || sessionStorage.getItem(CLAUDE_API.keyStore) || '';
+  } catch (e) { return typed; }
+}
+function forgetApiKey() {
+  try { sessionStorage.removeItem(CLAUDE_API.keyStore); } catch (e) {}
+  const el = document.getElementById('api-key-input'); if (el) el.value = '';
+}
+(function restoreApiKey() {
+  try {
+    const k = sessionStorage.getItem(CLAUDE_API.keyStore);
+    const el = document.getElementById('api-key-input'); if (k && el) el.value = k;
+  } catch (e) {}
+})();
+
 async function analyzeProposal() {
   const text = document.getElementById('proposal-text').value.trim();
   if (!text || text.length < 30) return;
@@ -1733,20 +1765,26 @@ Be concise (200 words max). Use JUNO scoring conventions.`;
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers: claudeHeaders(getApiKey()),
       body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
+        model: CLAUDE_API.model,
         max_tokens:1000,
         system: systemPrompt,
         messages:[{role:'user', content:`Analyze this GSE reform proposal:\n\n${text}`}]
       })
     });
-    const data = await res.json();
-    const reply = data.content?.find(b=>b.type==='text')?.text || 'No response received.';
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = data.error?.message || res.statusText;
+      throw new Error(res.status === 401
+        ? 'No valid API key. Paste a key above, or open JUNO inside claude.ai.'
+        : `Claude API ${res.status}: ${msg}`);
+    }
+    const reply = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('') || 'No response received.';
     resultDiv.textContent = reply;
     resultDiv.style.display = 'block';
   } catch(e) {
-    resultDiv.textContent = 'API error. Ensure you are running JUNO within claude.ai or provide an API key.';
+    resultDiv.textContent = (e && e.message) ? e.message : 'API error. Paste an API key above, or open JUNO inside claude.ai.';
     resultDiv.style.display = 'block';
   }
   btn.disabled = false;

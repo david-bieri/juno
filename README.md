@@ -48,7 +48,7 @@ Simulation 2: N-player coordination game with heterogeneous agency preferences. 
 Simulation 1: institutional complementarities network displayed from pre-computed outputs. Six-node network diagram with edge weights proportional to complementarity strength κ_ij. Isolated reform trajectory showing 28% equilibrium and 23% system fitness drop. Time-varying complementarity strengthening results (68% → 8% reform success across years 5–20). Pre-computed display only — full ODE model details in technical appendix.
 
 ### Tab 09 — SCENARIOS
-Six historical counterfactual projections: Corker-Warner passes (2014), Johnson-Crapo passes (2015), Trump Recap & Release succeeds (2020), Biden acts (2022), New legislative window (2027), and a user-defined intervention. Each scenario reruns path dependence accumulation from the intervention date, showing avoided lock-in and trilemma vertex accessibility. AI-powered Proposal Analyzer (Anthropic API) evaluates new reform proposals against the full rubric.
+Six historical counterfactual projections: Corker-Warner passes (2014), Johnson-Crapo passes (2015), Trump Recap & Release succeeds (2020), Biden acts (2022), New legislative window (2027), and a user-defined intervention. Each scenario reruns path dependence accumulation from the intervention date, showing avoided lock-in and trilemma vertex accessibility. AI-powered Proposal Analyzer (Anthropic API, `claude-sonnet-5-5`, set once in `CLAUDE_API`) evaluates new reform proposals against the full rubric. Inside claude.ai it needs no key; on its own site, paste an Anthropic API key in the field above the Analyze button (kept for the browser tab only).
 
 ---
 

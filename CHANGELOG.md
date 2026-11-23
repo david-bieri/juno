@@ -1,5 +1,13 @@
 # JUNO — Changelog
 
+## v1.0.1 · 23 November 2026
+
+### Fixed
+- Proposal Analyzer had failed since 15 Jun 2026: it called `claude-sonnet-4-20250514`, which Anthropic retired. Model is now `claude-sonnet-5-5`, set once in `CLAUDE_API`.
+- Requests now send the required `anthropic-version` header.
+- Works outside claude.ai: an API key field (with Forget) above the Analyze button; the key is kept in sessionStorage for the tab only.
+- API errors now show their message (401, retired model, rate limit) instead of "No response received."
+
 ## v1.0 · April 2026
 
 **Initial release.**
