@@ -113,7 +113,7 @@ Tinbergen, J. (1952). *On the Theory of Economic Policy*. North-Holland.
   version     = {1.0},
   institution = {Virginia Tech School of Public and International Affairs},
   publisher   = {GitHub},
-  url         = {https://github.com/davidbieri/juno},
+  url         = {https://github.com/david-bieri/juno},
   note        = {Trilemma framework, three agent-based simulations,
                  institutional complementarities, coordination game,
                  path dependence accumulation, temporal trap dynamics}

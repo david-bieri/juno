@@ -1,5 +1,11 @@
 # JUNO — Changelog
 
+## v1.0.2 · 24 November 2026
+
+### Fixed
+- Deployment: the Pages source is "GitHub Actions" but the repo had no Pages workflow, so nothing deployed after April (v1.0.1 never went live). Added `.github/workflows/pages.yml`.
+- Links use the current GitHub username (`david-bieri`).
+
 ## v1.0.1 · 23 November 2026
 
 ### Fixed
